@@ -1,0 +1,5 @@
+{
+  "puerto": 8095,
+  "publicar_en_red": true,
+  "ips_permitidas": []
+}

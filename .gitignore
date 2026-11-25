@@ -1,0 +1,71 @@
+# ============================================================
+#  LA COLONIAL POS - Archivos que NO deben subirse a GitHub
+#  (contienen datos reales de ventas, clientes e inventario)
+# ============================================================
+
+# --- Bases de datos -----------------------------------------
+# pos.db contiene ventas reales y la tabla `customers`
+# (nombre, RFC, teléfono, email, dirección y saldo de clientes).
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# --- Respaldos automáticos y manuales -----------------------
+backups/
+restaurar/
+*.backup
+*.bak
+
+# --- Exportes de reportes -----------------------------------
+exportes/
+
+# --- Tickets generados (HTML/impresos) ---------------------
+tickets/
+
+# --- Datos del histórico / ETL ------------------------------
+Historico/Auxiliares/inventario_limpio.csv
+Historico/Auxiliares/inventario_limpio.xlsx
+Historico/Auxiliares/sku_registry.json
+Historico/Auxiliares/historico/
+Historico/Auxiliares/*.db
+Historico/Auxiliares/*.csv
+Historico/Auxiliares/*.xlsx
+
+# Snapshot del catálogo con costos y existencias (datos del negocio)
+Historico/Auxiliares/migracion/*.csv
+
+# --- Logs ---------------------------------------------------
+*.log
+logs/
+
+# ============================================================
+#  Entornos y dependencias (se re-crean con los .bat)
+# ============================================================
+runtime/
+vendor/
+__pycache__/
+*.py[cod]
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# --- Paquetes y binarios generados --------------------------
+*.zip
+*.7z
+*.exe
+*.msi
+
+# --- Editores y sistema -------------------------------------
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+desktop.ini
+.DS_Store

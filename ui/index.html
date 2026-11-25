@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Buscador de Productos · La Colonial</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">LC</span>
+      <div class="brand-text">
+        <h1>La Colonial</h1>
+        <p>Buscador de productos</p>
+      </div>
+    </div>
+    <div class="status" id="status">Cargando catálogo…</div>
+  </header>
+
+  <main>
+    <div class="searchbox">
+      <input id="q" type="text" autocomplete="off" spellcheck="false"
+             autocapitalize="off" placeholder="Escanea el código, UPC/EAN/ISBN o escribe el nombre…"
+             autofocus aria-label="Buscar producto">
+      <button id="clear" class="clear" title="Limpiar (Esc)" aria-label="Limpiar búsqueda">✕</button>
+    </div>
+
+    <p class="hint" id="hint">
+      Escanea un producto, teclea su UPC/EAN/ISBN o escribe parte del nombre.
+      <b>F2</b> enfoca el buscador · <b>Esc</b> limpia.
+    </p>
+
+    <section id="detail" class="detail" hidden aria-live="polite"></section>
+
+    <div class="listhead">
+      <span id="count" class="count"></span>
+      <span id="truncated" class="muted"></span>
+    </div>
+
+    <div class="tablewrap">
+      <table id="results">
+        <thead>
+          <tr>
+            <th class="c-name">Producto</th>
+            <th class="c-loc">Ubicación</th>
+            <th class="c-price">Precio</th>
+            <th class="c-stock">Stock</th>
+            <th class="c-code">Código</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="empty" class="empty" hidden></div>
+    </div>
+  </main>
+
+  <footer>
+    <span>Base local · inventario_moderno.db</span>
+    <span id="loaded"></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

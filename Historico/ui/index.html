@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Histórico 1box · La Colonial</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">LC</span>
+      <div class="brand-text">
+        <h1>La Colonial</h1>
+        <p>Archivo histórico · inventario del sistema anterior</p>
+      </div>
+    </div>
+    <div class="head-right">
+      <span class="tag red" id="tag-red" hidden>RED LOCAL</span>
+      <span class="tag">SOLO CONSULTA</span>
+      <div class="status" id="status">Abriendo historico_1box.db…</div>
+    </div>
+  </header>
+
+  <main>
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab active" data-tab="productos" role="tab" aria-selected="true">
+        Productos
+      </button>
+      <button type="button" class="tab" data-tab="terceros" role="tab" aria-selected="false">
+        Clientes y proveedores
+      </button>
+    </nav>
+
+    <section id="tab-productos" class="tabpanel">
+      <div class="notice">
+        <strong>Inventario viejo (1box).</strong>
+        Busca por código de barras, SKU, código adicional o nombre. Esta pantalla
+        no modifica la base histórica ni el POS actual.
+      </div>
+
+      <div class="searchbox">
+        <input id="q" type="text" autocomplete="off" spellcheck="false"
+               autocapitalize="off" autofocus
+               placeholder="Escanea un código de barras o escribe el nombre…"
+               aria-label="Buscar en el histórico">
+        <button id="clear" class="clear" title="Limpiar (Esc)" aria-label="Limpiar búsqueda">✕</button>
+      </div>
+
+      <div class="toolbar">
+        <p class="hint">
+          Lector USB en modo teclado · <b>F2</b> enfoca · <b>Esc</b> limpia · <b>Enter</b> consulta
+        </p>
+        <label class="toggle">
+          <input type="checkbox" id="incluir" checked>
+          Incluir productos eliminados
+        </label>
+      </div>
+
+      <section id="detail" class="detail" hidden aria-live="polite"></section>
+
+      <div class="listhead">
+        <span id="count" class="count"></span>
+        <span id="truncated" class="muted"></span>
+      </div>
+
+      <div class="tablewrap">
+        <table id="results">
+          <thead>
+            <tr>
+              <th class="c-name">Producto</th>
+              <th class="c-state">Estado</th>
+              <th class="c-loc">Ubicación</th>
+              <th class="c-price">Precio</th>
+              <th class="c-stock">Existencia</th>
+              <th class="c-code">Código</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div id="empty" class="empty"></div>
+      </div>
+    </section>
+
+    <section id="tab-terceros" class="tabpanel" hidden>
+      <div class="notice">
+        <strong>Clientes, proveedores, marcas y personas de 1box.</strong>
+        Datos tal como quedaron en el sistema anterior: sirven para revisar
+       contactos, cuentas y saldos. Esta pantalla no modifica nada.
+      </div>
+
+      <div class="searchbox">
+        <input id="q3" type="text" autocomplete="off" spellcheck="false"
+               autocapitalize="off"
+               placeholder="Escribe un nombre, teléfono, correo o número de cuenta…"
+               aria-label="Buscar clientes y proveedores">
+        <button id="clear3" class="clear" title="Limpiar (Esc)" aria-label="Limpiar búsqueda">✕</button>
+      </div>
+
+      <div class="toolbar">
+        <p class="hint">
+          <b>F2</b> enfoca · <b>Esc</b> limpia · <b>Enter</b> consulta · <b>↑ ↓</b> elige la fila
+        </p>
+        <div class="filters">
+          <select id="tipo3" class="filtro">
+            <option value="todos">Todos</option>
+            <option value="cliente">Clientes</option>
+            <option value="proveedor">Proveedores</option>
+            <option value="fabricante">Marcas</option>
+            <option value="persona">Personas</option>
+          </select>
+          <label class="toggle">
+            <input type="checkbox" id="incluir3" checked>
+            Incluir eliminados
+          </label>
+        </div>
+      </div>
+
+      <section id="detail3" class="detail" hidden aria-live="polite"></section>
+
+      <div class="listhead">
+        <span id="count3" class="count"></span>
+        <span id="truncated3" class="muted"></span>
+      </div>
+
+      <div class="tablewrap">
+        <table id="results3">
+          <thead>
+            <tr>
+              <th class="c-name">Nombre</th>
+              <th class="c-state">Tipo</th>
+              <th class="c-contact">Contacto</th>
+              <th class="c-price">Saldo</th>
+              <th class="c-stock">Operaciones</th>
+              <th class="c-price">Importe</th>
+              <th class="c-code">Última</th>
+            </tr>
+          </thead>
+          <tbody id="tbody3"></tbody>
+        </table>
+        <div id="empty3" class="empty"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>historico_1box.db · abierta en modo solo lectura</span>
+    <span id="loaded"></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

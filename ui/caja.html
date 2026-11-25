@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Caja · La Colonial</title>
+  <link rel="stylesheet" href="caja.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">LC</span>
+    <div class="brand-text">
+      <h1>La Colonial</h1>
+      <p>Caja</p>
+    </div>
+  </div>
+  <div class="topinfo">
+    <span class="chip" id="userChip">Sin sesión</span>
+    <span class="chip" id="shiftChip">Turno —</span>
+    <span class="chip strong" id="todayChip">Hoy $0.00</span>
+    <span class="chip" id="printerChip" style="cursor:pointer" title="Configurar impresora de esta computadora">🖨 —</span>
+    <span class="chip clock" id="clock">--:--</span>
+    <button class="ghost small notifbtn" id="pendingBtn" hidden title="Tickets despachados pendientes de cobro (F6)">
+      Por cobrar <span class="notifbadge" id="pendingBadge" hidden>0</span>
+    </button>
+    <button class="ghost small" id="invBtn" hidden title="Inventario (F10)">Inventario</button>
+    <button class="ghost small notifbtn" id="notifBtn" title="Notificaciones de inventario">
+      Avisos <span class="notifbadge" id="notifBadge" hidden>0</span>
+    </button>
+    <button class="ghost small" id="menuBtn" title="Menú de caja">Menú</button>
+  </div>
+</header>
+
+<main id="posMain" class="layout" hidden>
+  <section class="searchpane">
+    <div class="searchbox">
+      <input id="scan" type="text" autocomplete="off" spellcheck="false" autocapitalize="off"
+             placeholder="Escanea el código o escribe el nombre del producto…" aria-label="Buscar producto">
+      <button id="clearSearch" class="clear" title="Limpiar (Esc)" aria-label="Limpiar búsqueda">✕</button>
+    </div>
+    <p class="hint">
+      <b>Enter</b> agrega · <b>↑ ↓</b> elige · <b>F2</b> buscar · <b>F4</b> cobrar · <b>F8</b> vaciar carrito
+    </p>
+    <div id="results" class="results" aria-live="polite"></div>
+  </section>
+
+  <aside class="cartpane">
+    <div class="carthead">
+      <h2>Carrito</h2>
+      <button id="clearCart" class="link" title="Vaciar carrito (F8)">Vaciar</button>
+    </div>
+    <div class="cartcustomer">
+      <div id="cartCustomerLabel" class="cartcustomer-label">Venta sin cliente asociado</div>
+      <div class="cartcustomer-actions">
+        <button id="chooseCustomerBtn" class="ghost small">Asignar cliente</button>
+        <button id="clearCustomerBtn" class="link small" hidden>Quitar</button>
+      </div>
+    </div>
+    <div id="cartLines" class="cartlines"></div>
+
+    <div class="totals">
+      <div class="trow"><span>Artículos</span><b id="tCount">0</b></div>
+      <div class="trow total"><span>Total</span><b id="tTotal">$0.00</b></div>
+      <button id="payBtn" class="paybtn">COBRAR <kbd>F4</kbd></button>
+      <div class="secondary">
+        <button id="pendingCartBtn" class="ghost" hidden>Por cobrar <span class="notifbadge" id="pendingCartBadge" hidden>0</span> <kbd>F6</kbd></button>
+        <button id="salesBtn" class="ghost">Ventas del día <kbd>F9</kbd></button>
+        <button id="cashMoveBtn" class="ghost">Entradas / Salidas <kbd>F7</kbd></button>
+        <button id="closeShiftBtn" class="ghost">Corte de caja</button>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<!-- ============================ Login / PIN ============================ -->
+<div id="loginScreen" class="overlay">
+  <div class="panel login" id="loginPanel">
+    <div class="panelbrand"><span class="logo big">LC</span></div>
+    <h2 id="loginTitle">Entrar a caja</h2>
+    <p id="loginSub" class="muted">Escribe tu PIN y presiona Entrar.</p>
+    <div id="pinDots" class="pindots" aria-label="PIN capturado"></div>
+    <div id="keypad" class="keypad">
+      <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
+      <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
+      <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
+      <button data-key="clear" class="soft">C</button>
+      <button data-key="0">0</button>
+      <button data-key="back" class="soft">⌫</button>
+    </div>
+    <div id="loginError" class="error" role="alert"></div>
+    <button id="loginSubmit" class="primary big">Entrar</button>
+  </div>
+
+  <div class="panel bootstrap" id="bootstrapPanel" hidden>
+    <h2>Configurar la caja</h2>
+    <p class="muted">Primera vez: crea el PIN del administrador y el de la persona que cobra.</p>
+    <label for="managerName">Nombre del administrador</label>
+    <input id="managerName" maxlength="60" placeholder="Ej. Laura">
+    <label for="managerPin">PIN del administrador (4 a 8 dígitos)</label>
+    <input id="managerPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password">
+    <label for="cashierName">Nombre del cajero</label>
+    <input id="cashierName" maxlength="60" placeholder="Ej. Ana">
+    <label for="cashierPin">PIN del cajero (4 a 8 dígitos)</label>
+    <input id="cashierPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password">
+    <div id="bootstrapError" class="error" role="alert"></div>
+    <button id="bootstrapBtn" class="primary big">Crear caja</button>
+  </div>
+</div>
+
+<!-- ============================ Abrir turno ============================ -->
+<div id="shiftScreen" class="overlay" hidden>
+  <div class="panel">
+    <h2 id="shiftScreenTitle">Abrir turno</h2>
+    <p class="muted" id="shiftScreenSub">Cuenta el efectivo con el que empiezas la caja (fondo inicial).</p>
+    <div id="shiftOpenFields">
+      <label for="openingCash">Fondo inicial</label>
+      <input id="openingCash" type="number" inputmode="decimal" step="0.01" min="0" value="0">
+      <div class="quick" id="openingQuick">
+        <button data-open="0">$0</button>
+        <button data-open="200">$200</button>
+        <button data-open="500">$500</button>
+        <button data-open="1000">$1,000</button>
+      </div>
+      <button id="openShiftBtn" class="primary big">Abrir caja</button>
+    </div>
+    <div id="shiftSellerWait" hidden style="margin: 18px 0; text-align: center;">
+      <p style="color: #b45309; font-weight: 500;">No hay un turno abierto en la tienda.<br>La persona encargada de Caja debe abrir el turno antes de poder registrar o despachar ventas.</p>
+      <button id="shiftCheckBtn" class="primary" style="margin-top: 10px;">Comprobar si ya abrieron turno</button>
+    </div>
+    <div id="shiftError" class="error" role="alert"></div>
+    <button id="logoutFromShift" class="link">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- ============================ Cobrar ============================ -->
+<div id="payModal" class="overlay" hidden>
+  <div class="panel pay">
+    <div id="payTicketMeta" class="summarybox" hidden style="margin-top:0;margin-bottom:10px"></div>
+    <div class="payhead">
+      <span id="payHeadLabel">Total a cobrar</span>
+      <b id="payTotal">$0.00</b>
+    </div>
+    <div class="methods" role="tablist">
+      <button class="method active" data-method="efectivo">Efectivo <kbd>1</kbd></button>
+      <button class="method" data-method="tarjeta">Tarjeta <kbd>2</kbd></button>
+      <button class="method" data-method="transferencia">Transferencia <kbd>3</kbd></button>
+    </div>
+
+    <div id="cashFields">
+      <label for="cashInput">Efectivo recibido</label>
+      <input id="cashInput" type="number" inputmode="decimal" step="0.01" min="0">
+      <div class="quick" id="cashQuick">
+        <button data-cash="exact">Exacto</button>
+        <button data-cash="50">$50</button>
+        <button data-cash="100">$100</button>
+        <button data-cash="200">$200</button>
+        <button data-cash="500">$500</button>
+        <button data-cash="1000">$1,000</button>
+      </div>
+      <div class="change"><span>Cambio</span><b id="changeValue">$0.00</b></div>
+    </div>
+
+    <div id="refFields" hidden>
+      <label for="refInput">Referencia / autorización (opcional)</label>
+      <input id="refInput" maxlength="60" placeholder="Folio de terminal">
+      <p class="muted">Registra aquí el cobro que hiciste en la terminal bancaria.</p>
+    </div>
+
+    <div id="payError" class="error" role="alert"></div>
+    <div class="modalactions">
+      <button id="payCancel" class="ghost">Cancelar <kbd>Esc</kbd></button>
+      <button id="payConfirm" class="primary big">Cobrar <kbd>Enter</kbd></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Venta lista ============================ -->
+<div id="doneModal" class="overlay" hidden>
+  <div class="panel done">
+    <div class="check">✓</div>
+    <h2 id="doneTitle">Venta cobrada</h2>
+    <div class="folio" id="doneFolio"></div>
+    <div class="changebig" id="doneChangeWrap"><span>Cambio</span><b id="doneChange">$0.00</b></div>
+    <div id="printStatus" class="printstatus"></div>
+    <div class="modalactions">
+      <a id="ticketLink" class="ghost" target="_blank" rel="noopener">Ver ticket</a>
+      <button id="newSaleBtn" class="primary big">Nueva venta <kbd>Enter</kbd></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Tickets pendientes de cobro ============================ -->
+<div id="pendingModal" class="overlay" hidden>
+  <div class="panel wide">
+    <div class="modalhead">
+      <h2>Tickets pendientes de cobro</h2>
+      <div class="head-actions">
+        <button class="ghost" id="pendingRefreshBtn">Actualizar</button>
+        <button class="ghost" data-close="pendingModal">Cerrar <kbd>Esc</kbd></button>
+      </div>
+    </div>
+    <p class="muted" style="margin:0 0 10px">
+      Ventas despachadas por los vendedores que aún no han sido pagadas en Caja. El inventario ya fue reservado; el efectivo se registra hasta que pulses <b>Cobrar</b>.
+    </p>
+    <div id="pendingSummary" class="daytotals"></div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Folio</th><th>Hora</th><th>Vendedor</th><th>Artículos</th><th class="num">Total</th><th></th></tr>
+        </thead>
+        <tbody id="pendingBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Ventas del día ============================ -->
+<div id="salesModal" class="overlay" hidden>
+  <div class="panel wide">
+    <div class="modalhead">
+      <h2>Ventas de hoy</h2>
+      <div class="head-actions">
+        <button class="ghost" id="exportBtn">Exportar CSV</button>
+        <button class="ghost" data-close="salesModal">Cerrar <kbd>Esc</kbd></button>
+      </div>
+    </div>
+    <div id="salesSummary" class="daytotals"></div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Folio</th><th>Hora</th><th>Cajero</th><th>Pago</th><th class="num">Total</th><th>Estado</th><th></th></tr>
+        </thead>
+        <tbody id="salesBody"></tbody>
+      </table>
+    </div>
+    <h3 class="subhead">Devoluciones de hoy</h3>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Folio</th><th>Hora</th><th>Ticket</th><th>Cajero</th><th>Forma</th><th class="num">Total</th><th>Estado</th><th></th></tr>
+        </thead>
+        <tbody id="returnsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Devolución ============================ -->
+<div id="returnModal" class="overlay" hidden>
+  <div class="panel wide">
+    <div class="modalhead">
+      <h2>Devolver</h2>
+      <button class="ghost" data-close="returnModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <div class="lookuprow">
+      <label for="returnFolio">Ticket (folio)</label>
+      <input id="returnFolio" placeholder="20261116-0001" autocomplete="off">
+      <button class="ghost" id="returnSearch">Buscar</button>
+    </div>
+    <div id="returnInfo" class="summarybox"></div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Producto</th><th class="num">Vendido</th><th class="num">Devuelto</th>
+              <th class="num">Pendiente</th><th class="num">A devolver</th><th class="num">Importe</th></tr>
+        </thead>
+        <tbody id="returnLines"></tbody>
+      </table>
+    </div>
+    <div class="returnfoot">
+      <div>
+        <label for="returnMethod">Forma de devolución</label>
+        <select id="returnMethod">
+          <option value="efectivo">Efectivo (sale de la caja)</option>
+          <option value="tarjeta">Tarjeta (se reembolsa en la terminal)</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
+      </div>
+      <div>
+        <label for="returnReason">Motivo</label>
+        <input id="returnReason" maxlength="200" placeholder="Ej. el cliente lo devolvió" autocomplete="off">
+      </div>
+      <div>
+        <label for="returnPin">PIN del gerente o administrador</label>
+        <input id="returnPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off">
+      </div>
+    </div>
+    <div id="returnError" class="error" role="alert"></div>
+    <div class="modalactions">
+      <button class="ghost" data-close="returnModal">Volver</button>
+      <button id="returnConfirm" class="danger">Confirmar devolución</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Precio de emergencia ============================ -->
+<div id="priceModal" class="overlay" hidden>
+  <div class="panel">
+    <h2>Precio de emergencia</h2>
+    <p class="muted">Ajuste local y temporal: no toca <b>1box</b>. Caduca solo, o en cuanto el
+      catálogo traiga el mismo precio.</p>
+    <div id="priceInfo" class="summarybox"></div>
+    <label for="priceNew">Precio de venta</label>
+    <input id="priceNew" type="number" step="0.01" min="0.01" inputmode="decimal">
+    <label for="priceReason">Motivo</label>
+    <input id="priceReason" maxlength="200" placeholder="Ej. 1box está caído, precio de hoy" autocomplete="off">
+    <label for="pricePin">PIN del gerente o administrador</label>
+    <input id="pricePin" type="password" inputmode="numeric" maxlength="8" autocomplete="off">
+    <div id="priceError" class="error" role="alert"></div>
+    <div class="modalactions">
+      <button class="ghost" data-close="priceModal">Cancelar</button>
+      <button id="priceSave" class="primary">Guardar precio</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Cancelar venta ============================ -->
+<div id="cancelModal" class="overlay" hidden>
+  <div class="panel">
+    <h2>Cancelar venta <span id="cancelFolio" class="muted"></span></h2>
+    <p id="cancelNote" class="muted">Esta acción queda registrada con el nombre de quien la autoriza.</p>
+    <label for="cancelReason">Motivo</label>
+    <input id="cancelReason" maxlength="300" placeholder="Ej. cobré el producto equivocado">
+    <label for="cancelPin">PIN del gerente o administrador</label>
+    <input id="cancelPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off">
+    <div id="cancelError" class="error" role="alert"></div>
+    <div class="modalactions">
+      <button class="ghost" data-close="cancelModal">Volver</button>
+      <button id="cancelConfirm" class="danger">Cancelar venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Cerrar turno ============================ -->
+<div id="shiftCloseModal" class="overlay" hidden>
+  <div class="panel wide">
+    <h2>Cerrar turno</h2>
+
+    <!-- ======== PASO 1: Contador de denominaciones ======== -->
+    <div id="denomPanel">
+      <p class="muted" style="margin:0 0 10px">Cuenta físicamente el efectivo en el cajón e ingresa la cantidad de piezas de cada denominación.</p>
+      <div id="denomGrid" class="denomgrid"></div>
+      <div id="denomTotalRow" class="denom-total-row">
+        <span>Total contado en caja</span>
+        <b id="denomTotal">$0.00</b>
+      </div>
+      <div id="denomRetirarBox" class="denom-retiro-box" hidden>
+        <div class="denom-retiro-title">🏦 Retiro sugerido para mañana (fondo máximo configurable)</div>
+        <div id="denomRetirarDetalle" class="denom-retiro-detalle"></div>
+        <div id="denomFondoFinal" class="denom-fondo-final"></div>
+      </div>
+      <div class="modalactions" style="margin-top:14px">
+        <button id="denomPrintBtn" class="ghost">🖨 Imprimir conteo</button>
+        <button id="denomNextBtn" class="primary">Continuar al cierre →</button>
+      </div>
+    </div>
+
+    <!-- ======== PASO 2: Cierre de turno ======== -->
+    <div id="shiftCloseStep2" hidden>
+      <div id="shiftCloseSummary" class="summarybox"></div>
+      <label for="countedCash">Efectivo contado en caja</label>
+      <input id="countedCash" type="number" inputmode="decimal" step="0.01" min="0" readonly>
+      <p class="hint">Se llena solo con la suma del conteo por denominación. Si el monto no
+        es el correcto, usa <b>← Volver al conteo</b> y corrige las piezas.</p>
+      <label for="shiftCloseNotes">Notas del cierre (opcional)</label>
+      <textarea id="shiftCloseNotes" rows="2" maxlength="300"
+        placeholder="Ej: faltó un billete de $100, se repuso con el cambio."></textarea>
+      <div class="change"><span>Diferencia</span><b id="shiftDiff">$0.00</b></div>
+      <div id="shiftCloseError" class="error" role="alert"></div>
+      <div class="modalactions">
+        <button id="denomBackBtn" class="ghost">← Volver al conteo</button>
+        <button id="confirmCloseShift" class="danger">Cerrar turno</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Entradas y salidas de efectivo ============================ -->
+<div id="cashModal" class="overlay" hidden>
+  <div class="panel wide">
+    <div class="modalhead">
+      <h2>Entradas y salidas de efectivo</h2>
+      <button class="ghost" data-close="cashModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <p class="muted" style="margin:0 0 10px">
+      Registra dinero que entra a la caja ajeno a las ventas (cambio, aportación) o dinero que sale para gastos, pagos a proveedores o retiros. Se refleja directamente en el efectivo esperado del turno actual.
+    </p>
+    <div id="cashShiftSummary" class="daytotals"></div>
+    <div class="cashlayout">
+      <div class="cashform">
+        <h3 class="subhead" id="cashFormTitle" style="margin-top:0">Registrar movimiento</h3>
+        <div class="methods cashkinds" role="tablist">
+          <button type="button" class="method active" data-cashkind="ingreso">+ Entrada de efectivo</button>
+          <button type="button" class="method" data-cashkind="retiro">− Salida / Gasto</button>
+        </div>
+        <label for="cashMoveAmount">Monto</label>
+        <input id="cashMoveAmount" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="0.00">
+        <label for="cashMoveReason">Concepto / motivo</label>
+        <input id="cashMoveReason" type="text" maxlength="160" placeholder="Ej. Cambio adicional, pago de garrafón, papelería…" autocomplete="off">
+        <div class="quick" id="cashReasonQuick">
+          <button type="button" data-reason="Cambio / morralla">Cambio / morralla</button>
+          <button type="button" data-reason="Gasto de tienda">Gasto de tienda</button>
+          <button type="button" data-reason="Pago a proveedor">Pago a proveedor</button>
+          <button type="button" data-reason="Retiro parcial de caja">Retiro parcial</button>
+        </div>
+        <div id="cashMoveError" class="error" role="alert"></div>
+        <button type="button" id="cashMoveSave" class="primary big">Registrar entrada</button>
+        <button type="button" id="cashMoveCancelEdit" class="ghost" style="width:100%;margin-top:8px" hidden>Cancelar edición</button>
+      </div>
+      <div class="cashhistory">
+        <h3 class="subhead" style="margin-top:0">Movimientos del turno actual</h3>
+        <p class="muted small" style="margin:-4px 0 8px">
+          Si un cajero capturó mal un movimiento, usa <b>Editar</b> o <b>Eliminar</b>. Cada corrección queda registrada en la bitácora con tu nombre.
+        </p>
+        <div class="tablewrap" style="max-height:42vh">
+          <table>
+            <thead>
+              <tr><th>Hora</th><th>Tipo</th><th>Concepto / motivo</th><th>Registró</th><th class="num">Monto</th><th></th></tr>
+            </thead>
+            <tbody id="cashMovesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Inventario ============================ -->
+<div id="inventoryModal" class="overlay" hidden>
+  <div class="panel wide invpanel">
+    <div class="modalhead">
+      <h2>Inventario</h2>
+      <div class="head-actions">
+        <button class="ghost" id="invNewBtn">Nuevo producto</button>
+        <button class="ghost" data-close="inventoryModal">Cerrar <kbd>Esc</kbd></button>
+      </div>
+    </div>
+    <div class="invlayout">
+      <div class="invleft">
+        <input id="invSearch" placeholder="Buscar por nombre, SKU o código…" autocomplete="off">
+        <div id="invResults" class="invresults"></div>
+      </div>
+      <div class="invright">
+        <div id="invDetail" class="invdetail">Elige un producto de la lista.</div>
+        <div id="invMoves" class="invmoves"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Usuarios ============================ -->
+<div id="usersModal" class="overlay" hidden>
+  <div class="panel wide">
+    <div class="modalhead">
+      <h2>Usuarios</h2>
+      <button class="ghost" data-close="usersModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <div id="usersList" class="tablewrap"></div>
+    <h3 class="subhead">Nuevo usuario</h3>
+    <div class="grid3">
+      <div>
+        <label for="newUserName">Nombre</label>
+        <input id="newUserName" maxlength="60" placeholder="Ej. Ana" autocomplete="off">
+      </div>
+      <div>
+        <label for="newUserRole">Rol</label>
+        <select id="newUserRole">
+          <option value="cajero">Cajero</option>
+          <option value="administrador">Administrador</option>
+          <option value="gerente">Gerente</option>
+        </select>
+      </div>
+      <div>
+        <label for="newUserPin">PIN</label>
+        <input id="newUserPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password">
+      </div>
+    </div>
+    <div id="usersError" class="error" role="alert"></div>
+    <button id="createUserBtn" class="primary">Crear usuario</button>
+  </div>
+</div>
+
+<!-- ============================ PIN de otro usuario ============================ -->
+<div id="pinModal" class="overlay" hidden>
+  <div class="panel">
+    <h2>Establecer PIN</h2>
+    <p class="muted" id="pinModalWho"></p>
+    <label for="pinModalNew">PIN nuevo (4 a 8 dígitos)</label>
+    <input id="pinModalNew" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password">
+    <div id="pinModalError" class="error" role="alert"></div>
+    <div class="modalactions">
+      <button class="ghost" data-close="pinModal">Cancelar</button>
+      <button id="pinModalSave" class="primary">Guardar PIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Unidades ============================ -->
+<div id="unitsModal" class="overlay" hidden>
+  <div class="panel">
+    <div class="modalhead">
+      <h2>Unidades de venta</h2>
+      <button class="ghost" data-close="unitsModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <p class="muted">
+      La unidad se muestra en el carrito y en el ticket. No se puede eliminar
+      una unidad que esté en uso por algún producto.
+    </p>
+    <div id="unitsList" class="unitlist"></div>
+    <h3 class="subhead">Agregar unidad</h3>
+    <div class="grid2">
+      <div>
+        <label for="unitName">Nombre</label>
+        <input id="unitName" maxlength="20" placeholder="Ej. Gramo" autocomplete="off">
+      </div>
+      <div>
+        <label for="unitSymbol">Abreviatura</label>
+        <input id="unitSymbol" maxlength="4" placeholder="Ej. gr" autocomplete="off">
+      </div>
+    </div>
+    <div id="unitsError" class="error" role="alert"></div>
+    <button id="unitAddBtn" class="primary">Agregar unidad</button>
+  </div>
+</div>
+
+<!-- ============================ Categorías ============================ -->
+<div id="categoriesModal" class="overlay" hidden>
+  <div class="panel">
+    <div class="modalhead">
+      <h2>Categorías</h2>
+      <button class="ghost" data-close="categoriesModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <p class="muted">
+      Las categorías organizan el inventario. No se puede eliminar una categoría
+      que esté en uso por algún producto.
+    </p>
+    <div id="categoriesList" class="unitlist"></div>
+    <h3 class="subhead">Agregar categoría</h3>
+    <div>
+      <label for="categoryName">Nombre</label>
+      <input id="categoryName" maxlength="60" placeholder="Ej. Regalos" autocomplete="off">
+    </div>
+    <div id="categoriesError" class="error" role="alert"></div>
+    <button id="categoryAddBtn" class="primary" style="margin-top:10px">Agregar categoría</button>
+  </div>
+</div>
+
+<!-- ============================ Ubicaciones ============================ -->
+<div id="locationsModal" class="overlay" hidden>
+  <div class="panel">
+    <div class="modalhead">
+      <h2>Ubicaciones</h2>
+      <button class="ghost" data-close="locationsModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <p class="muted">
+      Ubicaciones disponibles en la tienda (fila y sección). No se puede eliminar
+      una ubicación que esté en uso por algún producto.
+    </p>
+    <div id="locationsList" class="unitlist"></div>
+    <h3 class="subhead">Agregar ubicación</h3>
+    <div>
+      <label for="locationName">Nombre</label>
+      <input id="locationName" maxlength="30" placeholder="Ej. fila 6 sección 1" autocomplete="off">
+    </div>
+    <div id="locationsError" class="error" role="alert"></div>
+    <button id="locationAddBtn" class="primary" style="margin-top:10px">Agregar ubicación</button>
+  </div>
+</div>
+
+<!-- ============================ Motivos ============================ -->
+<div id="reasonsModal" class="overlay" hidden>
+  <div class="panel">
+    <div class="modalhead">
+      <h2>Motivos de movimiento</h2>
+      <button class="ghost" data-close="reasonsModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <p class="muted">
+      Motivos para dar de alta o baja existencias en el inventario.
+    </p>
+    <div id="reasonsList" class="unitlist"></div>
+    <h3 class="subhead">Agregar motivo</h3>
+    <div>
+      <label for="reasonName">Nombre</label>
+      <input id="reasonName" maxlength="60" placeholder="Ej. Merma" autocomplete="off">
+    </div>
+    <div id="reasonsError" class="error" role="alert"></div>
+    <button id="reasonAddBtn" class="primary" style="margin-top:10px">Agregar motivo</button>
+  </div>
+</div>
+
+<!-- ============================ Notificaciones ============================ -->
+<div id="notificationsModal" class="overlay" hidden>
+  <div class="panel wide">
+    <div class="modalhead">
+      <h2>Avisos de inventario</h2>
+      <button class="ghost" data-close="notificationsModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <p class="muted">
+      Estos productos tienen existencias negativas. El aviso permanece hasta que
+      el stock se corrija en el inventario; no bloquea la venta.
+    </p>
+    <div id="notifList" class="tablewrap"></div>
+  </div>
+</div>
+
+<!-- ============================ Clientes ============================ -->
+<div id="customersModal" class="overlay" hidden>
+  <div class="panel wide customers-panel">
+    <div class="modalhead">
+      <div>
+        <h2>Clientes</h2>
+        <p id="customersModeHint" class="muted small">Consulta clientes importados del histórico.</p>
+      </div>
+      <button class="ghost" data-close="customersModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <div class="customer-searchbar">
+      <input id="customersSearch" type="text" autocomplete="off"
+             placeholder="Nombre, teléfono, correo o RFC" aria-label="Buscar clientes">
+      <label class="customer-deleted-toggle">
+        <input id="customersIncludeDeleted" type="checkbox">
+        Incluir dados de baja
+      </label>
+    </div>
+    <div id="customersStatus" class="muted small" aria-live="polite"></div>
+    <div class="customers-layout">
+      <div class="tablewrap customers-results-wrap">
+        <table class="customers-table">
+          <thead>
+            <tr><th>Cliente</th><th>RFC</th><th>Teléfono</th><th>Correo</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody id="customersBody"></tbody>
+        </table>
+      </div>
+      <section id="customerDetail" class="customer-detail summarybox" aria-live="polite">
+        <p class="muted">Selecciona un cliente para consultar su ficha.</p>
+      </section>
+    </div>
+    <div class="modalactions">
+      <button id="customersCancelSelect" class="ghost" hidden>Volver a la venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ Menú ============================ -->
+<div id="menuModal" class="overlay" hidden>
+  <div class="panel">
+    <div class="modalhead">
+      <h2>Menú de caja</h2>
+      <button class="ghost" data-close="menuModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <div class="menulist">
+      <button id="cashMoveMenuBtn">Entradas y salidas de efectivo (F7)</button>
+      <button id="testPrintBtn">Probar impresora</button>
+      <button id="reprintBtn" hidden>Reimprimir último ticket</button>
+      <button id="exportBtn2">Exportar ventas de hoy (CSV)</button>
+      <button id="pricesBtn">Precios de emergencia</button>
+      <button id="customersBtn">Consultar clientes</button>
+      <button id="usersBtn">Usuarios</button>
+      <button id="unitsBtn">Unidades de venta</button>
+      <button id="backupBtn">Respaldar la caja ahora</button>
+      <button id="changePinBtn">Cambiar mi PIN</button>
+      <button id="logoutBtn" class="danger-soft">Cerrar sesión</button>
+    </div>
+    <div id="menuStatus" class="printstatus"></div>
+    <div id="priceList" class="pricelist" hidden></div>
+    <div id="pinChange" class="pinchange" hidden>
+      <label for="currentPin">PIN actual</label>
+      <input id="currentPin" type="password" inputmode="numeric" maxlength="8">
+      <label for="newPin">PIN nuevo</label>
+      <input id="newPin" type="password" inputmode="numeric" maxlength="8">
+      <button id="savePinBtn" class="primary">Guardar PIN</button>
+    </div>
+    <p class="muted small" id="menuVersion"></p>
+  </div>
+</div>
+
+<!-- ============================ Impresora local de esta PC ============================ -->
+<div id="printerModal" class="overlay" hidden>
+  <div class="panel">
+    <div class="modalhead">
+      <h2>Impresora de esta PC</h2>
+      <button class="ghost" data-close="printerModal">Cerrar <kbd>Esc</kbd></button>
+    </div>
+    <p class="muted" style="margin:0 0 10px">
+      Elige la impresora USB conectada a <b>esta computadora</b>. Cada terminal conserva su propia impresora aunque tengan nombres distintos.
+    </p>
+    <div id="printerLocalStatus" class="printstatus"></div>
+    <label for="localPrinterSelect">Impresora instalada en Windows</label>
+    <select id="localPrinterSelect"></select>
+    <div id="printerModalError" class="error" role="alert"></div>
+    <div class="modalactions" style="margin-top:14px">
+      <button id="localPrinterTestBtn" class="ghost">Probar impresora</button>
+      <button id="localPrinterSaveBtn" class="primary">Guardar impresora</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script src="caja.js"></script>
+</body>
+</html>

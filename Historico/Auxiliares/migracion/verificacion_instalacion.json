@@ -1,0 +1,85 @@
+{
+  "fecha": "2026-11-25 10:10:24",
+  "carpeta": "D:\\LaColonial_POS",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "resultados": [
+    {
+      "nombre": "Python 3.9 o superior",
+      "ok": true,
+      "detalle": "3.12.10 — portable",
+      "critico": true
+    },
+    {
+      "nombre": "Archivos del proyecto completos",
+      "ok": true,
+      "detalle": "12 archivos",
+      "critico": true
+    },
+    {
+      "nombre": "Base de datos íntegra (SQLite)",
+      "ok": true,
+      "detalle": "ok",
+      "critico": true
+    },
+    {
+      "nombre": "Tablas completas",
+      "ok": true,
+      "detalle": "21 tablas",
+      "critico": true
+    },
+    {
+      "nombre": "Inventario cargado",
+      "ok": true,
+      "detalle": "7,071 productos (7,070 activos)",
+      "critico": true
+    },
+    {
+      "nombre": "Usuarios configurados",
+      "ok": true,
+      "detalle": "6 usuario(s) activo(s)",
+      "critico": false
+    },
+    {
+      "nombre": "Historial de ventas accesible",
+      "ok": true,
+      "detalle": "859 ventas",
+      "critico": false
+    },
+    {
+      "nombre": "Permiso de escritura en la carpeta",
+      "ok": true,
+      "detalle": "D:\\LaColonial_POS",
+      "critico": true
+    },
+    {
+      "nombre": "Espacio en disco",
+      "ok": true,
+      "detalle": "1800.7 GB libres",
+      "critico": true
+    },
+    {
+      "nombre": "Servidor de caja activo",
+      "ok": false,
+      "detalle": "no está corriendo (es normal si aún no abriste caja.bat)",
+      "critico": false
+    },
+    {
+      "nombre": "Impresoras detectadas",
+      "ok": true,
+      "detalle": "POS-80, Microsoft Print to PDF",
+      "critico": false
+    },
+    {
+      "nombre": "Inventario congelado",
+      "ok": true,
+      "detalle": "congelado",
+      "critico": false
+    },
+    {
+      "nombre": "Histórico de 1box disponible",
+      "ok": true,
+      "detalle": "162 MB (solo consulta)",
+      "critico": false
+    }
+  ]
+}

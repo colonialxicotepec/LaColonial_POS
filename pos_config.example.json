@@ -1,0 +1,49 @@
+{
+  "store": {
+    "name": "LA COLONIAL",
+    "address": "DIRECCION DE LA TIENDA",
+    "phone": "0000000000",
+    "rfc": "XXXXXXXXXXX00",
+    "footer": "¡Gracias por su compra!",
+    "show_address": true
+  },
+  "printer": {
+    "name": "POS-80",
+    "width": 42,
+    "open_drawer": false,
+    "copies": 1,
+    "print_sale": true,
+    "print_shift": true,
+    "total_style": "raster"
+  },
+  "rules": {
+    "blocked_names": [
+      "descuento",
+      "abono a cuenta"
+    ],
+    "blocked_skus": [],
+    "min_price": 0.01,
+    "allow_zero_stock": true,
+    "max_cash_input": 50000,
+    "max_qty_per_line": 999,
+    "allow_emergency_prices": true,
+    "override_hours": 24,
+    "fondo_maximo": 1400
+  },
+  "security": {
+    "session_hours": 12,
+    "manager_required_for_cancel": true,
+    "manager_required_for_return": true,
+    "max_users": 8,
+    "min_pin_length": 4,
+    "ticket_secret": ""
+  },
+  "network": {
+    "allow_lan": false,
+    "allowed_ips": []
+  },
+  "backup": {
+    "auto_minutes": 60,
+    "keep_auto": 72
+  }
+}

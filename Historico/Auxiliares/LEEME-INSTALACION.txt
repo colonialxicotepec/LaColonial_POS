@@ -1,0 +1,19 @@
+POS LA COLONIAL - PAQUETE DE INSTALACION
+=========================================
+Este ZIP contiene todo lo necesario para operar la caja en una
+computadora Windows 11 limpia, SIN internet y SIN instalar nada
+en el sistema (trae Python portable dentro de la carpeta).
+
+PASOS
+-----
+1. Descomprime este ZIP en una carpeta, por ejemplo:
+      C:\LaColonial
+2. Doble clic en  instalar_python_portable.bat   (crea la carpeta runtime\)
+3. Doble clic en  verificar_instalacion.bat      (comprueba todo)
+4. Doble clic en  caja.bat                       (abre la caja)
+
+La base de datos con el inventario ya migrado va incluida (pos.db).
+El acta del corte de inventario va en  migracion\.
+
+Si Windows pregunta por la red: la caja sólo escucha en 127.0.0.1
+(no se abre a la red local). Puedes_denegar el permiso de firewall.
