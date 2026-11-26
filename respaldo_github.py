@@ -266,9 +266,12 @@ def write_manifest(repo: Path, db_file: Path, stats: dict) -> None:
     zips = sorted(p.name for p in repo.rglob("*.zip"))
     if zips:
         lineas.append("")
-        lineas.append("Archivos comprimidos (superan el limite de 100 MB de GitHub):")
+        lineas.append("Archivos comprimidos (.zip) - descomprimir antes de usarlos:")
         for z in zips:
-            lineas.append(f"  - {z}")
+            if z == "historico_1box.db.zip":
+                lineas.append(f"  - {z}   (supera el limite de 100 MB de GitHub)")
+            else:
+                lineas.append(f"  - {z}")
     lineas += [
         "",
         "RESTAURAR:",
