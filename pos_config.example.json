@@ -43,7 +43,7 @@
     "allowed_ips": []
   },
   "backup": {
-    "auto_minutes": 60,
-    "keep_auto": 72
+    "intervalo_horas": 4,
+    "keep_auto": 168
   }
 }

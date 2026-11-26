@@ -36,13 +36,14 @@ INCLUDE_FILES = [
     'reiniciar_caja.py', 'restaurar_respaldo.py',
     'pos_config.json',
     'caja.bat', 'buscar_productos.bat', 'impresora.bat', 'instalar_cajero.bat',
+    'instalar_inicio_servidor.bat',
     'caja_en_red.bat', 'abrir_puerto_firewall.bat',
     'instalar_python_portable.bat', 'verificar_instalacion.bat',
     'empaquetar_proyecto.bat',
     'README.md', 'README_POS.md',
     'INSTALACION.md', 'MANUAL_RAPIDO.md', 'ARQUITECTURA.md',
 ]
-INCLUDE_DIRS = ['ui', 'runtime', 'vendor', 'Historico']
+INCLUDE_DIRS = ['core', 'ui', 'runtime', 'vendor', 'Historico']
 SKIP_NAMES = {'__pycache__', 'scratch', 'test', 'dist', 'historico', 'tickets',
               'backups', 'exportes'}
 

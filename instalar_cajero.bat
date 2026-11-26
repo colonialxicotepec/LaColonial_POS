@@ -17,15 +17,11 @@ set "PYW=%~dp0runtime\pythonw.exe"
 if not exist "%PY%" set "PY=python"
 if not exist "%PYW%" set "PYW=pythonw"
 
-set /p "CAJA_IP=Escribe la IP de la Caja central (ej. 192.168.1.50): "
-if "%CAJA_IP%"=="" (
-  echo.
-  echo Debes escribir la IP de la Caja central. Cancelado.
-  pause >nul
-  exit /b 1
-)
+set "CAJA_IP="
+set /p "CAJA_IP=Nombre o IP del servidor [Enter = SERVIDOR.local]: "
+if "%CAJA_IP%"=="" set "CAJA_IP=SERVIDOR.local"
 
-"%PY%" -c "import json; ip='%CAJA_IP%'.strip().replace('http://','').split(':')[0]; json.dump({'server_url': f'http://{ip}:8090', 'printer_name': ''}, open('impresora_pc.json', 'w', encoding='utf-8'), indent=2); print('Configuracion guardada para http://' + ip + ':8090')"
+"%PY%" -c "import json; h='%CAJA_IP%'.strip().replace('http://','').replace('https://','').split('/')[0].split(':')[0]; json.dump({'server_url': f'http://{h}:8090', 'printer_name': ''}, open('impresora_pc.json', 'w', encoding='utf-8'), indent=2); print('Configuracion guardada para http://' + h + ':8090')"
 if errorlevel 1 (
   echo Error guardando configuracion.
   pause >nul

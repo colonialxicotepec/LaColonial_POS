@@ -8,8 +8,8 @@ echo.
 echo Esta caja ADMITIRA equipos de la misma red local.
 echo Cada equipo necesita el PIN de un usuario para entrar.
 echo.
-echo   Desde otro equipo:  http://IP-DE-ESTA-PC:8090/pos
-echo   (la IP aparece en la ventana negra de abajo)
+echo   Desde otro equipo:  http://%COMPUTERNAME%.local:8090/pos
+echo   (o usando la IP que aparece abajo)
 echo.
 echo Deja esta ventana abierta mientras cobras.
 echo.

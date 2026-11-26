@@ -435,16 +435,19 @@ la impresora). El efectivo se cuenta a mano en el corte de caja.
 | Cuándo | Dónde |
 |---|---|
 | Al arrancar el servidor | `backups/pos_AAAAMMDD_HHMMSS_arranque.db` |
-| Cada **60 minutos**, sólo si hubo ventas nuevas | `backups/pos_AAAAMMDD_HHMMSS_auto.db` |
+| Cada **4 horas**, sólo si hubo ventas nuevas y hay un turno abierto | `backups/pos_AAAAMMDD_HHMMSS_auto.db` |
+| Al abrir turno | `backups/pos_AAAAMMDD_HHMMSS_turno.db` |
 | Al cerrar turno | `backups/pos_AAAAMMDD_HHMMSS_corte.db` |
 | Menú → Respaldar ahora | `backups/pos_AAAAMMDD_HHMMSS_manual.db` |
 
-- Se conservan los últimos **72 respaldos automáticos** (`backup.keep_auto`).
+- Se conservan los últimos **168 respaldos automáticos** (`backup.keep_auto`),
+  unos 7 días a 6 respaldos por día.
 - Los respaldos **manuales y de corte nunca se borran solos**.
 - Cada respaldo se verifica al crearse (`PRAGMA integrity_check` y conteos de
   ventas, productos y usuarios); si no pasa, se descarta y se avisa.
-- El intervalo se ajusta en `pos_config.json` → `"backup": {"auto_minutes": 60,
-  "keep_auto": 72}`.
+- El intervalo se ajusta en `pos_config.json` → `"backup": {"intervalo_horas": 4,
+  "keep_auto": 168}`. El plazo se cuenta desde el último respaldo (arranque,
+  turno, corte o manual).
 - El respaldo es una copia completa y consistente de `pos.db` (API de SQLite,
   no copia de archivo).
 - `backups/ultimo_respaldo.json` deja la fecha, ruta y conteos del último

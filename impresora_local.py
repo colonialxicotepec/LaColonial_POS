@@ -140,11 +140,30 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     # ------------------------------------------------------------- proxy opcional al servidor POS
+    def _resolve_ipv4_url(self, server_url):
+        """Resuelve el host (ej. SERVIDOR.local) a IPv4 porque app_pos escucha en IPv4."""
+        try:
+            import socket
+            from urllib.parse import urlparse
+            u = urlparse(server_url)
+            host = u.hostname
+            if not host:
+                return server_url
+            port = u.port or (443 if u.scheme == 'https' else 80)
+            infos = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
+            if infos:
+                ipv4 = infos[0][4][0]
+                return f'{u.scheme}://{ipv4}:{port}'
+        except Exception:
+            pass
+        return server_url
+
     def _proxy(self, method):
         server_url = local_config().get('server_url') or ''
         if not server_url:
             return False
-        target = server_url + self.path
+        resolved_url = self._resolve_ipv4_url(server_url)
+        target = resolved_url + self.path
         body = self._body_raw() if method in ('POST', 'PUT', 'PATCH') else None
         headers = {}
         for h in ('Content-Type', 'Authorization', 'X-Pos-Token', 'Accept'):

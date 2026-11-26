@@ -165,7 +165,7 @@ El sistema respalda solo y **verifica cada respaldo** antes de darlo por bueno:
 | Cuándo | Dónde |
 |---|---|
 | Al abrir la caja | `backups\pos_AAAAMMDD_HHMMSS_arranque.db` |
-| Cada **60 minutos** si hubo ventas | `backups\pos_AAAAMMDD_HHMMSS_auto.db` |
+| Cada **4 horas** si hubo ventas nuevas y hay turno abierto | `backups\pos_AAAAMMDD_HHMMSS_auto.db` |
 | Al cerrar turno | `backups\pos_AAAAMMDD_HHMMSS_corte.db` |
 | A mano (Menú → Respaldar) | `backups\pos_AAAAMMDD_HHMMSS_manual.db` |
 

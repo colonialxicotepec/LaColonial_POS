@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-25 10:10:24",
+  "fecha": "2026-11-26 12:51:25",
   "carpeta": "D:\\LaColonial_POS",
   "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
   "resultados": [
@@ -12,7 +12,7 @@
     {
       "nombre": "Archivos del proyecto completos",
       "ok": true,
-      "detalle": "12 archivos",
+      "detalle": "13 archivos",
       "critico": true
     },
     {
@@ -24,13 +24,19 @@
     {
       "nombre": "Tablas completas",
       "ok": true,
-      "detalle": "21 tablas",
+      "detalle": "23 tablas",
       "critico": true
+    },
+    {
+      "nombre": "Tablas de clientes",
+      "ok": true,
+      "detalle": "403 clientes importados; público general predeterminado: sí",
+      "critico": false
     },
     {
       "nombre": "Inventario cargado",
       "ok": true,
-      "detalle": "7,071 productos (7,070 activos)",
+      "detalle": "7,102 productos (7,101 activos)",
       "critico": true
     },
     {
@@ -42,7 +48,7 @@
     {
       "nombre": "Historial de ventas accesible",
       "ok": true,
-      "detalle": "859 ventas",
+      "detalle": "966 ventas",
       "critico": false
     },
     {
@@ -54,7 +60,7 @@
     {
       "nombre": "Espacio en disco",
       "ok": true,
-      "detalle": "1800.7 GB libres",
+      "detalle": "1800.4 GB libres",
       "critico": true
     },
     {

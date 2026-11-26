@@ -561,6 +561,10 @@ class PosAPI:
             raise ValueError('El fondo inicial no puede ser negativo.')
         shift = pos_core.open_shift(session['user_id'], opening, data.get('notes') or '')
         pos_core.audit(session['user_id'], 'turno_abierto', f'turno={shift["id"]} fondo={opening}')
+        try:
+            pos_core.backup('turno')
+        except Exception:
+            pass
         self._json(handler, {'ok': True, 'shift': shift})
 
     def _shift_close(self, handler, parsed):

@@ -8,8 +8,10 @@ Servidor local del POS moderno de La Colonial.
 Ejecutar con doble clic en buscar_productos.bat (buscador) o caja.bat (POS).
 """
 
+import datetime
 import json
 import os
+import socket
 import sys
 import threading
 import time
@@ -206,22 +208,52 @@ def ip_local():
 
 
 def start_backup_loop():
-    """Respaldo automático configurable; sólo si hubo ventas nuevas."""
+    """Respaldo automático cada `intervalo_horas` horas, sólo si hubo ventas nuevas.
+
+    El plazo se reinicia en cada respaldo (arranque, apertura de turno, corte
+    o manual), usando `backups/ultimo_respaldo.json` para sobrevivir reinicios
+    de la caja. Solo corre si hay un turno abierto.
+    """
     config = pos_core.load_config()
-    minutes = max(5, int(config.get('backup', {}).get('auto_minutes', 60) or 60))
+    backup_cfg = config.get('backup', {}) or {}
+    if 'intervalo_horas' in backup_cfg:
+        try:
+            intervalo = max(1, int(backup_cfg.get('intervalo_horas') or 4))
+        except (TypeError, ValueError):
+            intervalo = 4
+    else:
+        try:
+            intervalo = max(1, int(backup_cfg.get('auto_minutes', 240) or 240) // 60)
+        except (TypeError, ValueError):
+            intervalo = 4
+
+    def _ultimo_respaldo():
+        path = os.path.join(pos_core.BACKUP_DIR, 'ultimo_respaldo.json')
+        try:
+            with open(path, encoding='utf-8') as fh:
+                data = json.load(fh)
+            dt = datetime.datetime.strptime(data.get('created_at', ''), '%Y-%m-%d %H:%M:%S')
+            return dt, int(data.get('sales', 0))
+        except Exception:
+            return None, 0
 
     def loop():
-        try:
-            last = pos_core.count_sales_total()['count']
-        except Exception:
-            last = 0
         while True:
-            time.sleep(minutes * 60)
+            time.sleep(60)
             try:
-                total = pos_core.count_sales_total()['count']
-                if total != last:
+                if pos_core.get_open_shift() is None:
+                    continue
+                last_dt, last_sales = _ultimo_respaldo()
+                now = datetime.datetime.now()
+                due = (last_dt is None) or ((now - last_dt).total_seconds() >= intervalo * 3600)
+                if not due:
+                    continue
+                try:
+                    total = pos_core.count_sales_total()['count']
+                except Exception:
+                    total = 0
+                if total != last_sales:
                     pos_core.backup('auto')
-                    last = total
             except Exception:
                 # Un respaldo fallido no debe tumbar la caja.
                 pass
@@ -306,9 +338,11 @@ def main():
     print(f'  Impresora        : {pos_print.resolve_printer(config) or "sin configurar"}')
     print('  Lector           : USB en modo teclado (escribe y da Enter)')
     if allow_lan:
+        host_local = f'{socket.gethostname()}.local'
         print('-' * 64)
         print('  ACCESO EN RED LOCAL HABILITADO')
-        print(f'  Desde otro equipo:  http://{ip_local()}:{port}/pos')
+        print(f'  Por nombre (mDNS):  http://{host_local}:{port}/pos')
+        print(f'  Por IP actual    :  http://{ip_local()}:{port}/pos')
         if ALLOWED_IPS:
             print(f'  Equipos permitidos : {", ".join(ALLOWED_IPS)}')
         else:
