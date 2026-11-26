@@ -102,13 +102,15 @@ def copy_tree(src: Path, dst: Path, skip_names=(".git", "__pycache__", "tickets"
     return count
 
 
-def store_file(src: Path, dst: Path, zip_big: bool = False) -> str:
+def store_file(src: Path, dst: Path, zip_big: bool = False, force_zip: bool = False) -> str:
     """Guarda un archivo en el repo de respaldo.
 
-    Si el archivo supera el limite de GitHub (100 MB) se guarda comprimido
-    como .zip. Devuelve 'copia', 'zip' o 'sin-cambios'.
+    Si el archivo supera el limite de GitHub (100 MB) o si force_zip es True,
+    se guarda comprimido como .zip (se restaura con Expand-Archive / unzip).
+    Devuelve 'copia', 'zip' o 'sin-cambios'.
     """
-    if src.stat().st_size >= BIG_FILE_THRESHOLD and zip_big:
+    comprimir = force_zip or (src.stat().st_size >= BIG_FILE_THRESHOLD and zip_big)
+    if comprimir:
         target = dst.with_name(dst.name + ".zip")
         # Reutiliza el zip si el origen no cambio.
         if target.exists() and abs(target.stat().st_mtime - src.stat().st_mtime) < 2:
@@ -217,7 +219,8 @@ def copy_backups(destino: Path, keep: int) -> int:
     clear_dir(destino)
     total = 0
     for p in dbs[:keep]:
-        shutil.copy2(p, destino / p.name)
+        # Se guardan comprimidos: ocupan ~3 veces menos en el historial de Git.
+        store_file(p, destino / p.name, force_zip=True)
         total += p.stat().st_size
     log(f"{min(keep, len(dbs))} respaldos conservados ({total / 1048576:.1f} MB)")
     return len(dbs[:keep])
