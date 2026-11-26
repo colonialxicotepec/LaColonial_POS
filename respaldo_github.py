@@ -310,6 +310,13 @@ def main() -> int:
 
     stats = {}
     copy_code(git, codigo)
+
+    # La guia de restauracion es la portada del repositorio privado de datos.
+    guia = codigo / "RESTAURACION.md"
+    if guia.exists():
+        shutil.copy2(guia, repo / "README.md")
+        log("README.md (guia de restauracion) actualizado")
+
     copy_config(datos / "pos_config.json")
 
     db_dest = datos / "pos.db"

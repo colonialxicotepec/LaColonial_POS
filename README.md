@@ -191,6 +191,9 @@ python respaldo_github.py --repo D:\OtraCarpeta
 
 ### Restaurar desde el respaldo
 
+Guía completa paso a paso (máquina nueva, base dañada, catálogo perdido,
+problemas frecuentes): **[`RESTAURACION.md`](RESTAURACION.md)**
+
 ```powershell
 git clone https://github.com/colonialxicotepec/LaColonial_POS_Datos.git
 cd LaColonial_POS_Datos
