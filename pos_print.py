@@ -167,7 +167,8 @@ def build_ticket_lines(sale, config):
         lines.append(('text', chunk))
 
     # --- Bloque del total: palabra e importe destacados ---
-    lines.append(('text', line))
+    lines.append(('text', ''))
+    lines.append(('text', ''))
     lines.append(('total_label', 'TOTAL'))
     lines.append(('total_amount', fmt_money(sale['total'])))
     lines.append(('text', line))
@@ -959,7 +960,10 @@ def escpos_lines(lines, config, cut=True, drawer=False):
             amount_text = str(text)
             break
     amount_scale = fit_scale(amount_text, printer) if amount_text else 4
-    label_scale = max(2, min(4, amount_scale - 2))
+    # Escala al doble del grosor: label y amount se imprimen con el doble
+    # de píxeles de trazo que en la versión anterior.
+    amount_scale = min(8, amount_scale * 2)
+    label_scale = max(4, min(8, amount_scale - 2))
 
     for kind, text in lines:
         if kind == 'logo':

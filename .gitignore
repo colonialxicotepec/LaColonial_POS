@@ -69,3 +69,7 @@ env/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# --- Temporales de herramientas y cargas -------------------
+.tmp.driveupload/
+*.tmp

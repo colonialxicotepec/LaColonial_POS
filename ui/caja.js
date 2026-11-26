@@ -99,10 +99,31 @@ async function imprimirEnLocal(lineas, texto, drawer = false) {
   }
 }
 
+/** Envía bytes ESC/POS pre-renderizados al agente local. */
+async function imprimirRawLocal(escpos_b64) {
+  try {
+    const res = await fetch(`${AGENTE_URL}/imprimir-raw`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ escpos_b64 }),
+    });
+    return await res.json();
+  } catch (_) {
+    return { ok: false, error: 'No hay impresora local en esta computadora.' };
+  }
+}
+
 /** Imprime el ticket en la impresora local si la hay; si no, avisa. */
 async function imprimirTicketLocal(data) {
   const lineas = data && data.ticket_lines;
   if (!lineas || !lineas.length) return null;
+  // Si el servidor ya envió los bytes ESC/POS pre-renderizados, usarlos
+  // directamente: el diseño del ticket siempre viene del servidor principal.
+  if (data.escpos_b64) {
+    const res = await imprimirRawLocal(data.escpos_b64);
+    if (res && res.ok) return { ok: true, printer: res.impresora || S.localPrinter.name };
+    // Fallback: intentar con las líneas tipadas (versión antigua)
+  }
   const isCash = isCashRegister() && !(data.sale && data.sale.status === 'pending');
   const res = await imprimirEnLocal(lineas, data.ticket_text, isCash);
   if (res && res.ok) {

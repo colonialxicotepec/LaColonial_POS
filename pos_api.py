@@ -5,6 +5,7 @@ Expone /api/pos/* y la página imprimible del ticket. La usa app_pos.py,
 que sigue sirviendo el buscador en la raíz y el POS en /pos.
 """
 
+import base64
 import datetime
 import html
 import json
@@ -964,8 +965,10 @@ class PosAPI:
         """Prepara el ticket de una venta.
 
         Si el navegador de esa PC tiene el agente de impresión local, el
-        servidor NO imprime: devuelve las líneas del ticket para que cada
-        caja imprima en la impresora USB de SU propia computadora.
+        servidor genera los bytes ESC/POS completos (pre-renderizados) y los
+        envía en base64 para que el agente local solo llame a print_raw().
+        Así el diseño del ticket siempre viene del servidor, independientemente
+        de la versión de pos_print.py instalada en la PC cliente.
         """
         lines = pos_print.build_ticket_lines(sale, config)
         width = int(config.get('printer', {}).get('width', 42) or 42)
@@ -978,32 +981,40 @@ class PosAPI:
                 'printer': '',
                 'ticket_text': text,
                 'lines': [],
+                'escpos_b64': None,
                 'local': False,
             }
         if data.get('impresion_local'):
             pos_print.save_ticket_copy(text, str(sale['folio']).replace('/', '-'), 'ticket')
+            # Pre-renderizar los bytes ESC/POS en el servidor
+            raw = pos_print.escpos_lines(lines, config, cut=True,
+                                         drawer=bool(data.get('drawer', False)))
             return {
                 'ok': False,
                 'error': '',
                 'printer': '',
                 'ticket_text': text,
                 'lines': [[k, t] for k, t in lines],
+                'escpos_b64': base64.b64encode(raw).decode('ascii'),
                 'local': True,
             }
         # Los despachos ('pending') de cajeros en red nunca deben imprimirse en la
         # impresora de la Caja central si su agente USB local no está activo.
         if sale.get('status') == 'pending':
             pos_print.save_ticket_copy(text, str(sale['folio']).replace('/', '-'), 'ticket')
+            raw = pos_print.escpos_lines(lines, config, cut=True, drawer=False)
             return {
                 'ok': False,
                 'error': 'Sin impresora USB local detectada en esta PC.',
                 'printer': '',
                 'ticket_text': text,
                 'lines': [[k, t] for k, t in lines],
+                'escpos_b64': base64.b64encode(raw).decode('ascii'),
                 'local': True,
             }
         printed = pos_print.print_sale(sale, config)
         printed['lines'] = [[k, t] for k, t in lines]
+        printed['escpos_b64'] = None
         printed['local'] = False
         return printed
 

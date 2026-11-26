@@ -225,6 +225,28 @@ class Handler(BaseHTTPRequestHandler):
                 'impresoras': pos_print.list_printers(),
             })
             return
+        if path == '/imprimir-raw':
+            body = self._body()
+            cfg = local_config()
+            printer = pos_print.resolve_printer(cfg)
+            try:
+                import base64 as _b64
+                raw_b64 = body.get('escpos_b64') or ''
+                if not raw_b64:
+                    self._json({'ok': False, 'error': 'Sin datos escpos_b64.'}, 400)
+                    return
+                raw = _b64.b64decode(raw_b64)
+                ok, error = pos_print.print_raw(raw, printer)
+            except Exception as exc:
+                log('ERROR al imprimir raw: ' + traceback.format_exc())
+                self._json({'ok': False, 'error': f'Error: {exc}'}, 500)
+                return
+            if ok:
+                log(f'Impreso (raw) en {printer} ({len(raw)} bytes)')
+            else:
+                log(f'Fallo (raw) en {printer}: {error}')
+            self._json({'ok': ok, 'error': error, 'impresora': printer})
+            return
         if path == '/imprimir':
             body = self._body()
             cfg = local_config()
