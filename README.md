@@ -158,50 +158,20 @@ código y documentación.
 
 ---
 
-## Respaldo en GitHub
+## Control de versiones y datos
 
-El proyecto se respalda en **dos repositorios**:
+Este repositorio público de GitHub se usa para **control de versiones del
+código y la documentación**, no como respaldo de los datos reales de la tienda.
+Por seguridad, `pos.db`, `backups/`, los tickets, inventarios operativos y
+`pos_config.json` con los valores reales no se publican.
 
-| Repositorio | Visibilidad | Contenido |
-|---|---|---|
-| **`LaColonial_POS`** (este) | Público | Código y documentación, sin datos reales. |
-| **`LaColonial_POS_Datos`** | **Privado** | Respaldo completo: `pos.db`, `pos_config.json` real, últimos respaldos, histórico (incluido el dump del sistema anterior), entorno portable y copia del código. |
+El archivo `pos_config.example.json` sirve como plantilla para una instalación
+nueva. Los datos reales deben conservarse mediante un método de respaldo
+independiente y privado.
 
-### Cómo se genera el respaldo
-
-```powershell
-respaldar_a_github.bat          # o: python respaldo_github.py
-```
-
-El script:
-
-1. Copia `pos.db` con la **API de backup de SQLite** (copia consistente aunque la caja esté cobrando).
-2. Copia `pos_config.json`, los últimos 5 respaldos `.db` y el módulo `Historico`.
-3. Guarda los archivos de más de 100 MB comprimidos en `.zip` (límite de GitHub).
-4. Escribe `MANIFIESTO.txt` con fecha, tamaños y SHA-256 de la base.
-5. Hace commit y `push` al repositorio **privado**.
-
-Opciones útiles:
-
-```powershell
-python respaldo_github.py --keep 10     # conservar más respaldos .db
-python respaldo_github.py --no-push     # dejar el commit local, sin subir
-python respaldo_github.py --repo D:\OtraCarpeta
-```
-
-### Restaurar desde el respaldo
-
-Guía completa paso a paso (máquina nueva, base dañada, catálogo perdido,
-problemas frecuentes): **[`RESTAURACION.md`](RESTAURACION.md)**
-
-```powershell
-git clone https://github.com/colonialxicotepec/LaColonial_POS_Datos.git
-cd LaColonial_POS_Datos
-# descomprimir los .zip (archivos > 100 MB) antes de copiar
-copy codigo\* D:\LaColonial_POS\ /S /Y
-copy datos\pos.db D:\LaColonial_POS\ /Y
-copy datos\pos_config.json D:\LaColonial_POS\ /Y
-```
+Para recuperar una base desde un archivo `.db` disponible localmente, consulta
+**[`RESTAURACION.md`](RESTAURACION.md)**. Esta guía no descarga ni recupera datos
+desde GitHub.
 
 ---
 
