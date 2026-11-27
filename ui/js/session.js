@@ -207,6 +207,7 @@ function renderHeader() {
   const manager = canManage();
   const cashRegister = isCashRegister();
   $('invBtn').hidden = !manager;
+  if ($('xicoParkBtn')) $('xicoParkBtn').hidden = !manager;
   $('unitsBtn').hidden = !manager;
   $('usersBtn').hidden = !isAdmin();
   $('closeShiftBtn').hidden = !cashRegister;

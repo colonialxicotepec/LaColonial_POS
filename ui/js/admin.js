@@ -489,7 +489,7 @@ const OVERLAYS = ['loginScreen', 'shiftScreen', 'payModal', 'doneModal', 'pendin
   'salesModal', 'cancelModal', 'shiftCloseModal', 'cashModal', 'menuModal', 'returnModal',
   'priceModal', 'inventoryModal', 'usersModal', 'unitsModal', 'categoriesModal',
   'locationsModal', 'reasonsModal', 'pinModal', 'notificationsModal', 'printerModal',
-  'customersModal'];
+  'customersModal', 'xicoParkModal'];
 
 function hideOverlays() {
   OVERLAYS.forEach((id) => {

@@ -26,6 +26,7 @@
       Por cobrar <span class="notifbadge" id="pendingBadge" hidden>0</span>
     </button>
     <button class="ghost small" id="invBtn" hidden title="Inventario (F10)">Inventario</button>
+    <button class="ghost small" id="xicoParkBtn" hidden title="Caja independiente XICO-PARK">XICO-PARK</button>
     <button class="ghost small notifbtn" id="notifBtn" title="Notificaciones de inventario">
       Avisos <span class="notifbadge" id="notifBadge" hidden>0</span>
     </button>
@@ -699,12 +700,68 @@
 
 <div id="toast" class="toast" hidden role="status"></div>
 
+<div id="xicoParkModal" class="overlay" hidden>
+  <div class="panel wide">
+    <div class="modalhead">
+      <div>
+        <h2>XICO-PARK · Caja Independiente</h2>
+        <p class="muted small" style="margin:2px 0 0">Registro separado de entradas, salidas y gastos (no afecta La Colonial).</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="xicoDate" type="date" style="width:auto;padding:8px 10px;font-size:15px">
+        <button class="ghost" data-close="xicoParkModal">Cerrar <kbd>Esc</kbd></button>
+      </div>
+    </div>
+
+    <div id="xicoTotals" class="daytotals" style="margin-top:10px">
+      <div><span>Entradas</span><strong id="xicoTotEntradas">$0.00</strong></div>
+      <div><span>Salidas</span><strong id="xicoTotSalidas">$0.00</strong></div>
+      <div><span>Gastos</span><strong id="xicoTotGastos">$0.00</strong></div>
+      <div><span>Salidas + Gastos</span><strong id="xicoTotSG" style="color:var(--bad,#b91c1c)">$0.00</strong></div>
+      <div><span>Saldo neto</span><strong id="xicoNeto">$0.00</strong></div>
+    </div>
+
+    <div class="cashlayout">
+      <div class="cashform">
+        <h3 class="subhead" style="margin-top:0">Registrar movimiento</h3>
+        <div class="methods" id="xicoKinds" role="tablist" style="grid-template-columns:repeat(3,1fr)">
+          <button type="button" class="method active" data-xicokind="salida">Salida</button>
+          <button type="button" class="method" data-xicokind="gasto">Gasto</button>
+          <button type="button" class="method" data-xicokind="entrada">Entrada</button>
+        </div>
+        <input type="hidden" id="xicoKind" value="salida">
+        <label for="xicoAmount">Monto ($)</label>
+        <input id="xicoAmount" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="0.00">
+        <label for="xicoConcept">Concepto / motivo</label>
+        <input id="xicoConcept" type="text" maxlength="200" placeholder="Ej. Pago de luz, retiro, fondo…" autocomplete="off">
+        <div id="xicoError" class="error" role="alert"></div>
+        <button type="button" id="xicoSaveBtn" class="primary big">Registrar salida</button>
+      </div>
+      <div class="cashhistory">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h3 class="subhead" style="margin:0">Movimientos del día</h3>
+          <button type="button" id="xicoPrintBtn" class="ghost">🖨 Imprimir resumen del día</button>
+        </div>
+        <div class="tablewrap" style="max-height:46vh">
+          <table>
+            <thead>
+              <tr><th>Hora</th><th>Tipo</th><th>Concepto / motivo</th><th>Registró</th><th class="num">Monto</th><th></th></tr>
+            </thead>
+            <tbody id="xicoBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="js/state.js"></script>
 <script src="js/session.js"></script>
 <script src="js/shifts.js"></script>
 <script src="js/sales.js"></script>
 <script src="js/inventory.js"></script>
 <script src="js/admin.js"></script>
+<script src="js/xico_park.js"></script>
 <script src="js/init.js"></script>
 </body>
 </html>

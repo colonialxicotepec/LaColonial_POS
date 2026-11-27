@@ -17,6 +17,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pos_core
 import pos_print
+from core import xico_park
 from catalogo import norm
 
 APP_VERSION = '0.2.7'
@@ -203,6 +204,8 @@ class PosAPI:
             return self._pending_sales(handler, parsed)
         if path == '/api/pos/export/sales':
             return self._export(handler, parsed)
+        if path == '/api/pos/xico-park/summary':
+            return self._xico_summary(handler, parsed)
         if path == '/api/pos/notifications':
             return self._notifications(handler, parsed)
         if path.startswith('/api/pos/sale/'):
@@ -483,6 +486,12 @@ class PosAPI:
                 return self._user_active(handler, parsed)
             if path == '/api/pos/user/pin':
                 return self._user_pin(handler, parsed)
+            if path == '/api/pos/xico-park/movement':
+                return self._xico_add(handler, parsed)
+            if path == '/api/pos/xico-park/cancel':
+                return self._xico_cancel(handler, parsed)
+            if path == '/api/pos/xico-park/print':
+                return self._xico_print(handler, parsed)
             if path == '/api/pos/print/test':
                 return self._test_print(handler, parsed)
             if path == '/api/pos/backup':
@@ -614,10 +623,19 @@ class PosAPI:
         try:
             if local_print:
                 # El corte se imprime en la impresora de ESTA PC (agente local).
+                # Se pre-renderizan los bytes ESC/POS en el servidor para que el
+                # agente local solo llame a print_raw(): así el diseño (doble
+                # tamaño, negritas, raster del TOTAL) es idéntico al que sale en
+                # la impresora del servidor, independiente de la versión de
+                # pos_print.py instalada en la PC cliente.
                 report = pos_print.build_shift_report(closed, config)
                 pos_print.save_ticket_copy(report, f'turno-{closed["id"]}', 'corte')
+                lines = pos_print.build_shift_lines(closed, config)
+                raw = pos_print.escpos_shift_lines(lines, config, cut=True, drawer=False)
                 printed = {'ok': False, 'ticket_text': report, 'error': '',
-                           'printer': '(impresora local)', 'local': True}
+                           'printer': '(impresora local)', 'local': True,
+                           'escpos_b64': base64.b64encode(raw).decode('ascii'),
+                           'lines': [[k, t] for k, t in lines]}
             else:
                 printed = pos_print.print_shift(closed, config)
         except Exception as exc:
@@ -1691,6 +1709,72 @@ class PosAPI:
         pos_core.audit(session['user_id'], 'usuario_creado', f'{name} ({role})')
         self._json(handler, {'ok': True, 'user': pos_core.get_user(user_id),
                              'users': pos_core.list_users()})
+
+    # ------------------------------------------------------------ XICO-PARK (caja independiente)
+    def _require_xico_role(self, session):
+        if session['role'] not in ('administrador', 'gerente'):
+            raise ValueError('Sólo el administrador o gerente puede usar XICO-PARK.')
+
+    def _xico_summary(self, handler, parsed):
+        session, config = self._auth(handler, parsed)
+        if not session:
+            return
+        self._require_xico_role(session)
+        qs = parse_qs(parsed.query)
+        day = (qs.get('day') or [None])[0]
+        summary = xico_park.day_summary(day)
+        self._json(handler, {'ok': True, **summary})
+
+    def _xico_add(self, handler, parsed):
+        session, config = self._auth(handler, parsed)
+        if not session:
+            return
+        self._require_xico_role(session)
+        data = self._body(handler)
+        mov = xico_park.add_movement(
+            data.get('kind'),
+            data.get('amount'),
+            data.get('concept'),
+            user_name=session.get('name') or '',
+            day=data.get('day'),
+        )
+        summary = xico_park.day_summary(mov['day'])
+        self._json(handler, {'ok': True, 'movement': mov, **summary})
+
+    def _xico_cancel(self, handler, parsed):
+        session, config = self._auth(handler, parsed)
+        if not session:
+            return
+        self._require_xico_role(session)
+        data = self._body(handler)
+        mov = xico_park.cancel_movement(
+            data.get('id'),
+            reason=data.get('reason') or '',
+            user_name=session.get('name') or '',
+        )
+        summary = xico_park.day_summary(mov['day'])
+        self._json(handler, {'ok': True, 'movement': mov, **summary})
+
+    def _xico_print(self, handler, parsed):
+        session, config = self._auth(handler, parsed)
+        if not session:
+            return
+        self._require_xico_role(session)
+        data = self._body(handler)
+        summary = xico_park.day_summary(data.get('day'))
+        is_local = bool(data.get('impresion_local'))
+        printed = pos_print.print_xico_park(summary, config, do_print=not is_local)
+        raw_bytes = printed.pop('raw_bytes', b'')
+        escpos_b64 = base64.b64encode(raw_bytes).decode('ascii') if (is_local and raw_bytes) else None
+        self._json(handler, {
+            'ok': True,
+            'printed': printed['ok'],
+            'printer': printed['printer'],
+            'print_error': printed['error'],
+            'ticket_text': printed['ticket_text'],
+            'ticket_lines': printed['lines'],
+            'escpos_b64': escpos_b64,
+        })
 
 
 # ---------------------------------------------------------------- ticket HTML

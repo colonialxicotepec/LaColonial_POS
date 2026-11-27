@@ -125,8 +125,16 @@ async function confirmShiftClose() {
     let printError = (data.print && data.print.error) || '';
 
     // Con impresora local, el corte se manda a la impresora de ESTA PC.
+    // Si el servidor envió los bytes ESC/POS pre-renderizados, usarlos directamente
+    // (preserva el formato: doble tamaño, negritas y raster del TOTAL), como se
+    // hace con los tickets de venta. Fallback a texto plano si no vienen.
     if (local && reportText) {
-      const res = await imprimirEnLocal(null, reportText);
+      let res = null;
+      if (data.print && data.print.escpos_b64) {
+        res = await imprimirRawLocal(data.print.escpos_b64);
+      } else {
+        res = await imprimirEnLocal(null, reportText);
+      }
       if (res && res.ok) {
         printed = true;
         printer = res.impresora || printer;

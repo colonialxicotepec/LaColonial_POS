@@ -1255,3 +1255,65 @@ def print_return(return_record, sale, config, do_print=True):
     ok, error = print_raw(data, printer)
     result.update({'ok': ok, 'printer': printer, 'error': error})
     return result
+
+
+def build_xico_park_lines(summary, config):
+    """Líneas tipadas para el ticket de resumen del día de XICO-PARK."""
+    width = int(config.get('printer', {}).get('width', 42) or 42)
+    line = '=' * width
+    thin = '-' * width
+    totals = summary.get('totals') or {}
+    lines = [
+        ('text', line),
+        ('store_name', 'XICO-PARK'),
+        ('text', 'CONTROL DE CAJA INDEPENDIENTE'.center(width)),
+        ('text', line),
+        ('text', f'Fecha     : {summary.get("day") or ""}'),
+        ('text', f'Impreso   : {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}'),
+        ('text', thin),
+    ]
+    kind_label = {'entrada': 'ENT', 'salida': 'SAL', 'gasto': 'GAS'}
+    movs = [m for m in (summary.get('movements') or []) if m.get('active')]
+    if movs:
+        lines.append(('text', 'MOVIMIENTOS DEL DIA'))
+        for m in reversed(movs):
+            tag = kind_label.get(m.get('kind'), 'MOV')
+            amt = fmt_money(m.get('amount'))
+            concept = str(m.get('concept') or '')[:max(10, width - 17)]
+            lines.append(('text', f'{tag} {concept:<{width - 15}}{amt:>11}'))
+        lines.append(('text', thin))
+    else:
+        lines.append(('text', 'Sin movimientos activos en el dia.'))
+        lines.append(('text', thin))
+
+    lines.append(('text', f'Total Entradas    {fmt_money(totals.get("entradas")):>{width - 18}}'))
+    lines.append(('text', f'Total Salidas     {fmt_money(totals.get("salidas")):>{width - 18}}'))
+    lines.append(('text', f'Total Gastos      {fmt_money(totals.get("gastos")):>{width - 18}}'))
+    lines.append(('text', ''))
+    lines.append(('total_label', 'SALIDAS + GASTOS'))
+    lines.append(('total_amount', fmt_money(totals.get('salidas_gastos'))))
+    lines.append(('text', thin))
+    lines.append(('text', f'Saldo Neto        {fmt_money(totals.get("neto")):>{width - 18}}'))
+    lines.append(('text', line))
+    return lines
+
+
+def print_xico_park(summary, config, do_print=True):
+    lines = build_xico_park_lines(summary, config)
+    width = int(config.get('printer', {}).get('width', 42) or 42)
+    text = render_ticket_text(lines, width)
+    data = escpos_lines(lines, config, cut=True, drawer=False)
+    result = {
+        'ticket_text': text,
+        'lines': [[k, t] for k, t in lines],
+        'raw_bytes': data,
+        'printer': '',
+        'error': '',
+        'ok': False,
+    }
+    if not do_print:
+        return result
+    printer = resolve_printer(config)
+    ok, error = print_raw(data, printer)
+    result.update({'ok': ok, 'printer': printer, 'error': error})
+    return result

@@ -1,221 +1,95 @@
-# Manual rápido — Caja La Colonial
+# 📖 Manual Rápido de Caja · La Colonial
 
-Una página. Si esto es lo único que necesitas leer, es suficiente para cobrar.
-
----
-
-## Antes de cobrar
-
-1. Doble clic en **`caja.bat`** y **déjalo abierto** (si lo cierras, la caja se apaga).
-2. Escribe tu **PIN** y presiona **Entrar**.
-3. **Abrir turno** → cuenta el efectivo con el que empiezas → escribe el
-   **fondo inicial** → **Abrir caja**.
-
-> Si la tienda pide cobrar desde otra pantalla o tablet, el encargado abre
-> `caja_en_red.bat` y te pasa la dirección (algo como
-> `http://192.168.0.104:8090/pos`). Tú entras igual, con tu PIN.
->
-> **En cada PC que cobra:** deja corriendo **`impresora.bat`** para que el
-> ticket salga en **la impresora de esa misma PC** (y no en la de la caja
-> central). Arriba a la derecha debe verse **🖨 POS-80**; si ves
-> **🖨 sin impresora local**, arranca `impresora.bat`.
+Este documento es tu guía de bolsillo para el día a día en el punto de venta.  
+**Regla de oro:** Tu PIN es personal e intransferible. Todo lo que hagas en el sistema quedará registrado con tu nombre en la bitácora de auditoría.
 
 ---
 
-## Modo Mostrador (Vendedores en rol de cajero)
-
-Si estás en una PC o tablet de mostrador (con rol de **Cajero**):
-- El botón verde dice **DESPACHAR (F4)** en lugar de COBRAR.
-- Al presionar **F4**, la venta se registra de inmediato, descuenta existencias y genera el ticket con tu nombre (`Vendedor: [Tu Nombre]`).
-- **No capturas dinero ni calculas cambio:** entrega el ticket impreso al cliente indicándole que pase a liquidar a la **Caja central**.
-- La terminal central de **Caja** es la única que tiene cajón de dinero, abre el turno por la mañana y realiza el corte de caja al final del día.
-
----
-
-## Cobrar (Terminal central de Caja)
-
-1. **Escanea** el producto (el lector escribe el código y da Enter solo).
-   Si el producto **no tiene código**, escribe parte del nombre y elígelo de
-   la lista con el mouse. Si el producto tiene **pieza y paquete**, al escanear
-   aparecen ambos: elige cuál con `↑` `↓` (o con el mouse) y pulsa **Enter**.
-2. Para cobrar otro más del mismo: escánalo otra vez.
-3. Cantidades: usa los botones **−** y **+** de cada línea (suman o restan 1).
-   Para vender por peso, haz **clic en la cantidad** y escribe el decimal
-   (por ejemplo `0.75`); la unidad (`kg`, `gr`, `pza`, `paq`, `cja`) aparece
-   junto a la cantidad. Para quitar la línea: la **✕**.
-4. Presiona **F4** (o el botón **COBRAR**).
-5. Elige cómo paga:
-   - **Efectivo**: escribe lo que te dieron (o usa los botones de $50, $100…).
-     La pantalla te dice el **cambio**.
-   - **Tarjeta / Transferencia**: escribe la referencia si te la piden.
-6. **Enter** para cobrar. Verás el cambio en grande.
-7. **Enter** otra vez para el siguiente cliente.
-
-> 🖨 **El ticket sale solo** por la impresora térmica (POS-80, papel de 80 mm),
-> con el **TOTAL enorme** (letras dibujadas a 6× de grosor) y el papel cortado.
-> Si la impresora falla, **la venta NO se pierde**: queda guardada y el ticket
-> se puede reimprimir con **F9 → Reimprimir** (o abrirlo en el navegador con
-> **Ver ticket**).
-
-### Atajos
-
-| Tecla | Qué hace |
-|---|---|
-| `F2` | Volver al buscador |
-| `Enter` | Agregar el producto / confirmar el cobro |
-| `↑` `↓` | Elegir de la lista |
-| `F4` | Cobrar (o despachar, si eres vendedor) |
-| `F6` | Tickets despachados pendientes de cobro (Caja) |
-| `F7` | Entradas y salidas de efectivo (Caja) |
-| `F8` | Vaciar el carrito |
-| `F9` | Ventas del día |
-| `F10` | Inventario (sólo administrador o gerente) |
-| `Esc` | Cerrar la ventana |
+## ⌨️ Atajos de Teclado (Para ir más rápido)
+| Tecla | Acción |
+| :--- | :--- |
+| **F2** | Ir directamente al buscador de productos. |
+| **Enter** | Agregar producto al carrito / Confirmar cobro. |
+| **↑ / ↓** | Elegir un producto de la lista de búsqueda. |
+| **F4** | Cobrar la venta actual (o "Despachar" si eres vendedor de piso). |
+| **F6** | Ver tickets pendientes de cobro (solo Caja). |
+| **F7** | Registrar Entradas o Salidas de efectivo (gastos, cambio, etc.). |
+| **F8** | Vaciar el carrito actual (pide confirmación). |
+| **F9** | Ver ventas del día, cancelar o devolver una venta. |
+| **F10** | Abrir el panel de Inventario (solo Gerente/Administrador). |
+| **Esc** | Limpiar búsqueda o cerrar una ventana emergente. |
 
 ---
 
-## Si el cliente devuelve algo
+## 🔄 Flujo Diario de Operación
 
-**F9** → botón **Devolver** (o escribe el folio del ticket y **Buscar**) →
-marca las líneas → **motivo** → **PIN del gerente o administrador** →
-**Confirmar devolución**.
+### 1. Inicio de Turno
+1. Abre el programa de la Caja (ícono en el escritorio) e ingresa tu **PIN**.
+2. Si eres el primero en llegar, el sistema te pedirá **Abrir Turno**.
+3. Ingresa el **Fondo Inicial** (el efectivo con el que empieza la caja, ej. $500) y confirma.
 
-Se imprime un comprobante y el dinero sale de la caja (queda registrado en el
-corte). Si el turno original ya se cerró, el reintegro se carga al turno abierto;
-sin turno abierto no se puede devolver en efectivo. Si te equivocaste al
-devolver, en la misma lista la **anulas**. Si después cancelas la venta, la
-devolución ya queda incluida en la cancelación y no se puede anular por separado.
+### 2. Cobrar una Venta
+1. Escanea el producto o escribe su nombre y presiona **Enter**.
+2. Si hay varios productos similares, usa las flechas **↑ / ↓** para elegir el correcto y presiona **Enter**.
+3. Ajusta la cantidad con los botones `+` / `-` (o haz clic en el número para escribir decimales, ej. `0.75` kg).
+4. Presiona **F4** o el botón **COBRAR**.
+5. Selecciona la forma de pago:
+   - **Efectivo:** Escribe el monto que te da el cliente. El sistema calcula el cambio automáticamente.
+   - **Tarjeta / Transferencia:** Registra el monto exacto cobrado en la terminal.
+6. Entrega el ticket al cliente y presiona **Enter** o "Nueva venta" para continuar.
 
----
+### 3. Asociar un Cliente a la Venta
+- Por defecto, las ventas son a **"PÚBLICO EN GENERAL"**.
+- Si el cliente lo solicita, haz clic en **"Asignar cliente"** en el panel del carrito *antes* de cobrar.
+- Busca por nombre, teléfono o RFC. Selecciónalo y continúa con el cobro normal.
 
-## Si te equivocaste al cobrar
-
-- **Antes de cobrar**: quita la línea con la **✕** o vacía el carrito con `F8`.
-- **Ya cobraste**: **F9** → **Cancelar** → motivo + **PIN del gerente o administrador**.
-  Si la venta ya tenía una devolución parcial, sólo se repone lo que falta y se
-  devuelve el efectivo pendiente.
-
----
-
-## Tickets despachados por vendedores (por cobrar)
-
-Los vendedores en modo mostrador no reciben dinero: al pulsar **DESPACHAR (F4)**
-el ticket queda **pendiente de cobro** y el inventario se descuenta de una vez.
-
-- En la **Caja central**, el botón cambia a **COBRAR PENDIENTES (N) F4** y también
-  hay un botón **Por cobrar** con contador (atajo **F6**).
-- **Cobrar** abre la ventana de pago con el folio, el vendedor y los artículos.
-  Hasta ese momento el efectivo **no** se suma al turno.
-- Si el cliente no paga, **Cancelar** devuelve el inventario y no mueve efectivo.
-- La pantalla de Caja revisa nuevos despachos cada pocos segundos.
+### 4. Despachar (Solo Vendedores de Piso)
+- Si tu rol es "Cajero/Vendedor", tu botón dirá **DESPACHAR**.
+- Esto reserva el inventario e imprime un ticket marcado como *"PENDIENTE DE COBRO"*.
+- **No registra dinero en la caja**. El cliente debe llevar ese ticket a Caja para pagarlo.
 
 ---
 
-## Entradas y salidas de efectivo (Caja)
+## 🔐 Operaciones que Requieren PIN de Gerente o Administrador
 
-**F7** o **Entradas / Salidas** registra dinero ajeno a las ventas:
+Estas acciones están protegidas y requieren que un superior ingrese su PIN para autorizarlas:
 
-- **+ Entrada de efectivo**: cambio adicional, aportación, fondo extra.
-- **− Salida / Gasto**: papelería, garrafón, pago a proveedor, retiro parcial.
-
-Cada movimiento pide **monto** y **concepto**, y se refleja de inmediato en el
-**efectivo esperado** del turno y en el corte.
-
-### Corregir un error de captura (gerente o administrador)
-
-En la lista **Movimientos del turno actual** cada renglón tiene **Editar** y
-**Eliminar**:
-
-- **Editar** carga el movimiento en el formulario. Puedes cambiar monto,
-  concepto e incluso convertir una entrada en salida (o al revés). Guarda con
-  **Guardar cambios**; **Cancelar edición** deja todo como estaba.
-- **Eliminar** pide confirmación y borra el movimiento.
-- Sólo se pueden corregir movimientos del **turno abierto**. Las ventas,
-  devoluciones y cancelaciones no se tocan desde aquí: usa **F9**.
-- Cada edición o eliminación queda en la **bitácora** con el nombre de quien la
-  hizo, el valor anterior y el nuevo.
+- **Cancelar una venta ya cobrada:** Ve a *Ventas del día (F9)*, busca el ticket, pulsa *Cancelar*, escribe el motivo y solicita el PIN. El efectivo se descontará del corte del turno actual.
+- **Hacer una devolución:** Ve a *Ventas del día (F9)* → *Devolver*. Ingresa el folio o búscalo. Elige qué artículos se devuelven, el motivo, la forma de reembolso (Efectivo, Tarjeta o Transferencia) y solicita el PIN.
+- **Ajustar Inventario (F10):** Dar de alta, baja o modificar existencias de un producto. Siempre se debe escribir un motivo (ej. "Merma", "Compra a proveedor").
+- **Cambiar un precio temporalmente:** Solo si el catálogo tiene un error urgente. Queda registrado quién lo hizo y caduca a las 24 horas.
 
 ---
 
-## Cerrar el día
+## 🏦 Cierre de Turno (Corte de Caja)
 
-1. **Corte de caja** (abajo a la derecha).
-2. **Cuenta por denominación**: escribe cuántas piezas hay de cada moneda y
-   billete. La pantalla suma el total y, si sobra efectivo, sugiere cuánto
-   retirar en billetes para dejar el **fondo máximo** en caja (por omisión
-   $1,400; se ajusta con `rules.fondo_maximo` en `pos_config.json`).
-3. **🖨 Imprimir conteo** saca una hoja con el desglose (opcional).
-4. **Continuar al cierre →**. El total contado se pasa solo al campo de
-   efectivo (ese campo **no se puede escribir**: si el monto no cuadra,
-   vuelve al paso 1 y corrige las piezas; la caja no acepta un corte
-   descuadrado).
-5. La pantalla te dice el **efectivo esperado** y la **diferencia**.
-6. Si hay diferencia, repítela antes de cerrar.
-7. Si quedaron **tickets por cobrar**, la pantalla te avisa: no son efectivo
-   de este turno, se cobran en el siguiente.
-8. Puedes escribir una **nota de cierre** (opcional) para explicar una
-   diferencia o un faltante; sale impresa en el corte.
-9. **Cerrar turno**. El corte incluye el **desglose por denominación**, el
-   **retiro sugerido**, las devoluciones, las entradas/salidas de efectivo, los
-   pendientes de cobro y tus notas; se guarda el corte y se hace un respaldo.
-   El corte **sale impreso** en la térmica; si la impresora falla, se abre en
-   una ventana del navegador para imprimirlo o consultarlo.
-
-> El retiro sugerido es solo una recomendación: **no** descuenta dinero del
-> turno ni genera un movimiento. Si retiras efectivo, regístralo antes en
-> **Entradas / Salidas (F7)** como salida.
+1. Presiona el botón **Corte de caja** (o ve al Menú).
+2. **Paso 1 - Conteo físico:** Ingresa cuántas piezas hay de cada billete y moneda. El sistema sumará el total automáticamente.
+   - *Nota:* Si el total supera el fondo máximo permitido, el sistema te sugerirá cuántos billetes retirar para dejar la caja equilibrada para el día siguiente.
+3. **Paso 2 - Confirmación:** El sistema comparará tu conteo con el "Efectivo Esperado" (ventas + fondo inicial - gastos). 
+4. Si hay una diferencia, puedes agregar una **Nota del cierre** (ej. "Se equivocó el cambio a las 10:00 am").
+5. Confirma el cierre. Se imprimirá el reporte de corte y se generará un respaldo automático de seguridad.
 
 ---
 
-## Inventario (administrador o gerente)
+## 🚨 Primeros Auxilios (Solución de Problemas Rápidos)
 
-**F10** → busca el producto →
-
-- **+ Alta / − Baja**: suma o resta existencias. El motivo viene en **`Error de Conteo`**
-  por defecto y se elige de la lista desplegable (`Error de Conteo`, `Compra`,
-  `Caducidad`…), con botón **Administrar motivos…** para agregar o quitar.
-  Queda registrado con tu nombre, la fecha y la hora.
-- **Guardar cambios**: corrige nombre, código, categoría, ubicación, precio o costo
-  (unidad, categoría y ubicación son listas desplegables administrables).
-- **Dar de baja**: el producto deja de venderse (no se borra, se puede reactivar).
-- **Nuevo producto**: alta de un artículo que no existe en el catálogo (el SKU
-  viene precargado con el siguiente libre, categoría en `Papelería` y ubicación
-  en `fila 1 sección 1`; todos se pueden cambiar).
-- **Empaque**: en el producto, sección “Empaque de otro producto” → elige el
-  suelto y las unidades por empaque. Vender 1 empaque descuenta esas unidades
-  del suelto (ej. paquete de 10 → descuenta 10 piezas).
-
-> La **importación del catálogo** (`Historico/Auxiliares/inventario_moderno.db` →
-> `pos.db`) no se hace desde esta pantalla: se hace con **`Historico/Auxiliares/importar_inventario.bat`**
-> en la computadora de la caja (sólo el administrador). Deja el stock local como
-> está y refresca nombres y precios; los precios nuevos aplican en la siguiente
-> venta.
-
-### Stock negativo
-
-Si un producto aparece en **rojo** con **“Stock negativo”**, se puede vender
-igual: el sistema deja el saldo negativo a propósito. El aviso **Avisos** de la
-barra superior lo recuerda hasta que el inventario se corrija con un alta, una
-devolución o un ajuste. No se descarta a mano: se cierra solo cuando el stock
-vuelve a cero o más.
+| Síntoma | Causa probable y solución rápida |
+| :--- | :--- |
+| **Escaneo el producto y no pasa nada** | El cursor no está en el buscador. Presiona **F2** y vuelve a escanear. |
+| **"Sesión expirada"** | La caja se bloquea tras 12 horas sin uso. Simplemente vuelve a ingresar tu PIN. |
+| **El ticket no sale de la impresora** | Revisa el icono 🖨 en la esquina superior derecha. Si dice *"sin impresora local"*, avisa a soporte técnico para que reinicie el servicio de impresión. **La venta ya quedó guardada**, puedes reimprimirla luego con F9. |
+| **"Ya hay un turno abierto"** | Un compañero olvidó cerrar su turno. Busca a la persona que abrió la caja para que haga el corte, o solicita al Administrador que lo fuerce. |
+| **El sistema dice "Producto bloqueado"** | Ese artículo es de control interno (ej. "Descuento", "Abono a cuenta") y no se puede cobrar. |
+| **Aparece un aviso rojo de "Stock negativo"** | Puedes vender el producto normalmente. El aviso es solo un recordatorio para que el gerente revise el inventario físico después. |
 
 ---
 
-## Si algo falla
+## 🛡️ Reglas de Seguridad Innegociables
 
-| Mensaje | Qué hacer |
-|---|---|
-| “Sesión expirada” | Vuelve a entrar con tu PIN. |
-| “Ese código está en más de un producto” | Elige el correcto de la lista. |
-| “Producto sin existencias” | Se puede vender igual: revisa con el gerente. El stock negativo se marca en rojo y deja aviso. |
-| “El pago es insuficiente” | Escribe el efectivo recibido completo. |
-| “No se encontró el producto” | Búscalo por nombre. |
-| El ticket no sale | **Menú → Probar impresora**. Revisa que esté encendida y con papel; si sigue igual, la venta ya quedó guardada: reimprímela con **F9 → Reimprimir**. |
-| El cajón no abre | No hay cajón conectado: el efectivo se cuenta a mano en el corte de caja. |
-| La caja se cerró | Vuelve a abrir `caja.bat`. |
+1. **Nunca compartas tu PIN.** Si alguien más lo usa para cancelar una venta o hacer un ajuste, el sistema registrará que fuiste **tú** quien lo hizo.
+2. **No apagues ni cierres la ventana negra** del sistema. Si se cierra, la caja se apaga y se interrumpen las operaciones.
+3. **No instales programas ni navegues en internet** en la computadora de la caja. Esto puede activar el antivirus y bloquear el funcionamiento del sistema.
 
-**No borres nada** de la carpeta del proyecto y **no cierres la caja** con una
-venta a medias. Ante una duda, anótala y consulta antes de tocar los datos.
-
----
-*Manual rápido · POS La Colonial · 24/11/2026*
+> **¿Dudas o fallas que no estén aquí?**  
+> No intentes "arreglarlo" reiniciando la computadora a la fuerza. Toma nota del mensaje de error exacto y contacta a soporte técnico.
