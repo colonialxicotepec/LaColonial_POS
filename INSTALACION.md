@@ -27,6 +27,44 @@ de firewall (puedes denegarlo, la caja no usa la red).
 
 ---
 
+## 0-bis. ¿Esta PC es el servidor o un cliente?
+
+Antes de instalar, decide el rol de esta computadora:
+
+| Rol | Qué es | Archivos clave | Cómo se usa |
+|---|---|---|---|
+| **Servidor (caja central)** | La PC que tiene la base de datos y atiende a toda la tienda | `caja.bat`, `caja_en_red.bat`, `instalar_inicio_servidor.bat`, `pos.db` | Se abre con `caja.bat` (local) o `caja_en_red.bat` (red) |
+| **Cliente (PC de cajero)** | PC adicional que cobra e imprime, pero **no** tiene base propia | `instalar_cajero.bat`, `impresora_local.py`, `impresora_pc.json` | Se abre el acceso directo "La Colonial POS" del Escritorio (proxy local `:8099`) |
+
+- Sólo **una** PC es el servidor. Las demás son clientes.
+- El servidor debe estar encendido y con la caja abierta para que los clientes puedan cobrar.
+- Los clientes necesitan el **agente de impresora USB** corriendo (se registra automáticamente con `instalar_cajero.bat`).
+
+### Instalación del servidor (PC central)
+
+Sigue las secciones 1 a 5 tal cual. Al final, si quieres que el servidor arranque solo al encender la PC:
+
+```
+instalar_inicio_servidor.bat
+```
+
+Esto registra `caja_en_red.bat` en el Inicio de Windows para que al encender la PC se abra el POS en red automáticamente.
+
+### Instalación del cliente (PC de cajero)
+
+1. Copia la misma carpeta del proyecto a la PC cliente (o descomprime el ZIP).
+2. Ejecuta `instalar_python_portable.bat` (si falta `runtime\`).
+3. Ejecuta **`instalar_cajero.bat`** una sola vez. Te pedirá el nombre o IP del servidor (Enter = `SERVIDOR.local`). Crea:
+   - `impresora_pc.json` con la URL del servidor.
+   - Un acceso directo en Inicio de Windows para el agente de impresora USB (invisible).
+   - Un acceso directo "La Colonial POS" en el Escritorio.
+4. El agente de impresora arranca automáticamente; la PC cliente ya puede cobrar desde el Escritorio (no necesita ejecutar ningún `.bat`).
+5. Para verificar: abre el acceso directo y entra con tu PIN. Si carga el POS, todo bien.
+
+> `verificar_instalacion.bat` **sólo sirve en el servidor** (comprueba `pos.db` y `pos_config.json`). En un cliente no aplica.
+
+---
+
 ## 1. Descomprime el paquete
 
 1. Copia el archivo `LaColonial_POS_AAAAMMDD_HHMMSS.zip` a la computadora nueva.
@@ -169,9 +207,10 @@ El sistema respalda solo y **verifica cada respaldo** antes de darlo por bueno:
 | Al cerrar turno | `backups\pos_AAAAMMDD_HHMMSS_corte.db` |
 | A mano (Menú → Respaldar) | `backups\pos_AAAAMMDD_HHMMSS_manual.db` |
 
-Se conservan los **últimos 72 automáticos**. Los respaldos **manuales y de
-corte nunca se borran solos**. Copia la carpeta `backups\` a una USB o a la nube
-**una vez por semana** (o al cierre del día).
+Se conservan los **últimos 168 respaldos automáticos** (combinados: arranque,
+cada 4 horas y corte). Los respaldos **manuales nunca se borran solos**. Copia la
+carpeta `backups\` a una USB o a la nube **una vez por semana** (o al cierre del
+día).
 
 ### Restaurar un respaldo
 
@@ -194,10 +233,18 @@ y confirma con `verificar_instalacion.bat`.
 
 ---
 
-## 7. Impresión (pendiente de definir)
+## 7. Impresión
 
-Hoy **no se imprime**: el ticket se ve en pantalla (botón **Ver ticket**) y se
-guarda en texto en `tickets\`. Cuando se defina la impresión local:
+La impresión se hace **en la PC que tiene la impresora USB** (normalmente el
+servidor, o cada cliente si tiene su propia impresora). El flujo es:
+
+- **Servidor**: genera los bytes ESC/POS (`/api/tickets/print` y `/api/shifts/close`)
+  y los envía al cliente que los solicita.
+- **Cliente**: recibe los bytes y los manda a la impresora USB vía el agente
+  `impresora_local.py` (endpoint `/imprimir-raw`). Si el agente no está
+  corriendo, el ticket se muestra en pantalla como respaldo.
+
+### Configuración (`pos_config.json`)
 
 | Dato | Dónde se configura |
 |---|---|
@@ -207,8 +254,22 @@ guarda en texto en `tickets\`. Cuando se defina la impresión local:
 | Abrir el cajón al cobrar | `"open_drawer": true` |
 | Ancho del papel | `"width": 42` (80 mm) o `32` (58 mm) |
 
-Para probarlo: **Menú → Probar impresora** (manda un ticket de prueba).
-Si el ticket sale cortado, ajusta `"width"`.
+En el cliente, el agente usa `impresora_pc.json` (creado por `instalar_cajero.bat`)
+con `server_url` apuntando al servidor y `printer_name` con el nombre de la
+impresora USB local.
+
+### Probar la impresión
+
+**Menú → Probar impresora** (manda un ticket de prueba). Si el ticket sale
+cortado, ajusta `"width"`.
+
+Si el agente del cliente no está corriendo, reinícialo:
+
+```
+runtime\pythonw.exe impresora_local.py
+```
+
+O vuelve a ejecutar `instalar_cajero.bat`.
 
 ---
 
@@ -314,20 +375,28 @@ El detalle está en **`MANUAL_RAPIDO.md`** (una página, para el personal).
 
 ## 11. Lista de verificación final
 
-Marca cada punto en la computadora nueva antes de operar:
-
+### Servidor
 - [ ] Carpeta descomprimida en `C:\LaColonial` (no en OneDrive ni Program Files)
 - [ ] `instalar_python_portable.bat` terminó con “Python portable OK”
 - [ ] `verificar_instalacion.bat` no muestra fallos
 - [ ] `caja.bat` abre el navegador en `127.0.0.1:8090/pos`
-- [ ] (Opcional) Si se cobrará desde otro equipo de la red: `caja_en_red.bat`
-      muestra la dirección y se entra con el PIN; si Windows lo bloquea, se
-      corrió `abrir_puerto_firewall.bat` como administrador
+- [ ] (Opcional) `caja_en_red.bat` muestra la dirección y se entra con el PIN
+- [ ] (Opcional) `instalar_inicio_servidor.bat` registrado para arranque automático
 - [ ] Se crearon el PIN del administrador y el del cajero
 - [ ] Se creó el resto de los usuarios (hasta 8) en Menú → Usuarios
 - [ ] `pos_config.json` tiene dirección, teléfono y RFC
 - [ ] Prueba de humo: venta, cambio, corte sin diferencia
 - [ ] Se programó una copia semanal de `backups\` (USB o nube)
+- [ ] El equipo está en la lista de excepciones del antivirus
+
+### Cliente
+- [ ] Carpeta descomprimida en `C:\LaColonial`
+- [ ] `instalar_python_portable.bat` terminó con “Python portable OK”
+- [ ] `instalar_cajero.bat` ejecutado y `impresora_pc.json` creado
+- [ ] El agente de impresora arranca solo (acceso directo en Inicio de Windows)
+- [ ] El acceso directo "La Colonial POS" del Escritorio abre el POS
+- [ ] Se puede entrar con el PIN y cobrar
+- [ ] La impresora USB imprime ticket y corte (Menú → Probar impresora)
 - [ ] El equipo está en la lista de excepciones del antivirus
 
 ---
