@@ -26,7 +26,7 @@ BACKUP_DIR = os.path.join(BASE_DIR, 'backups')
 TICKET_DIR = os.path.join(BASE_DIR, 'tickets')
 EXPORT_DIR = os.path.join(BASE_DIR, 'exportes')
 
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 11
 
 DEFAULT_UNITS = (
     ('Pieza', 'pza'),
@@ -407,6 +407,33 @@ def _migrate_schema(conn):
                legacy_id, nombre, es_publico, activo, origen
            ) VALUES(1, 'PÚBLICO EN GENERAL', 1, 1, 'historico_1box')"""
     )
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS proveedores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            legacy_id INTEGER UNIQUE,
+            empresa TEXT NOT NULL,
+            nombre_contacto TEXT,
+            apellido_contacto TEXT,
+            rfc TEXT,
+            telefono TEXT,
+            email TEXT,
+            direccion TEXT,
+            ciudad TEXT,
+            estado TEXT,
+            cp TEXT,
+            saldo REAL NOT NULL DEFAULT 0,
+            notas TEXT,
+            activo INTEGER NOT NULL DEFAULT 1,
+            origen TEXT NOT NULL DEFAULT 'pos',
+            creado_en TEXT,
+            actualizado_en TEXT
+        )
+    """)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_proveedores_empresa ON proveedores(empresa)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_proveedores_rfc ON proveedores(rfc)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_proveedores_telefono ON proveedores(telefono)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_proveedores_email ON proveedores(email)")
 
 
 def init_db():

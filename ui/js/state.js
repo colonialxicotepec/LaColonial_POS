@@ -25,6 +25,7 @@ const S = {
   customerMode: 'browse',
   customerRows: [],
   customerDetail: null,
+  proveedorRows: [],
   results: [],
   units: [],
   search: null,

@@ -22,6 +22,7 @@ const truncatedEl3 = document.getElementById('truncated3');
 const clearBtn3 = document.getElementById('clear3');
 const incluirEl3 = document.getElementById('incluir3');
 const tipoEl3 = document.getElementById('tipo3');
+const allBtn3 = document.getElementById('all3');
 
 let timer = null;
 let lastQuery = null;
@@ -35,6 +36,7 @@ let timer3 = null;
 let lastQuery3 = null;
 let lastType3 = null;
 let lastDeleted3 = null;
+let showAll3 = false;
 let activeTab = 'productos';
 let selectedRow3 = 0;
 
@@ -536,6 +538,7 @@ input3.addEventListener('keydown', (e) => {
 clearBtn3.addEventListener('click', () => {
   input3.value = '';
   lastQuery3 = null;
+  showAll3 = false;
   hideThirdDetail();
   input3.focus();
   runSearchThirds(false);
@@ -543,12 +546,20 @@ clearBtn3.addEventListener('click', () => {
 
 tipoEl3.addEventListener('change', () => {
   lastQuery3 = null;
+  showAll3 = false;
   selectedRow3 = 0;
   hideThirdDetail();
   runSearchThirds(false);
 });
 
 incluirEl3.addEventListener('change', () => {
+  lastQuery3 = null;
+  showAll3 = false;
+  runSearchThirds(false);
+});
+
+allBtn3.addEventListener('click', () => {
+  showAll3 = true;
   lastQuery3 = null;
   runSearchThirds(false);
 });
@@ -813,6 +824,8 @@ async function runSearchThirds(explicit) {
   const tipo = tipoEl3.value;
   const inc = incluirEl3.checked ? 1 : 0;
 
+  if (q !== lastQuery3) showAll3 = false;
+
   if (q === lastQuery3 && tipo === lastType3 && inc === lastDeleted3 && lastQuery3 !== null) {
     return null;
   }
@@ -821,8 +834,9 @@ async function runSearchThirds(explicit) {
   lastDeleted3 = inc;
 
   try {
+    const limit = showAll3 ? 2000 : 60;
     const data = await api(
-      `/api/terceros?q=${encodeURIComponent(q)}&tipo=${encodeURIComponent(tipo)}&eliminados=${inc}`
+      `/api/terceros?q=${encodeURIComponent(q)}&tipo=${encodeURIComponent(tipo)}&eliminados=${inc}&limit=${limit}`
     );
 
     if (data.loading) return null;
@@ -830,6 +844,12 @@ async function runSearchThirds(explicit) {
       statusEl.classList.add('error');
       statusEl.textContent = 'Error en la base histórica: ' + (data.error || 'desconocido');
       return null;
+    }
+
+    if (allBtn3) {
+      const total = Number(data.total || 0);
+      const returned = Number(data.returned || (data.results || []).length || 0);
+      allBtn3.hidden = !(total > returned) || showAll3;
     }
 
     renderThirds(data);

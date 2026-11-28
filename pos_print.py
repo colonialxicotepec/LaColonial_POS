@@ -14,7 +14,11 @@ import zlib
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TICKET_DIR = os.path.join(BASE_DIR, 'tickets')
-LOGO_PATH = os.path.join(TICKET_DIR, 'logo.png')
+# El logo operativo vive en ui/ para viajar en el paquete y en Git.
+# Se conserva tickets/logo.png como compatibilidad con instalaciones previas.
+LOGO_PATH = os.path.join(BASE_DIR, 'ui', 'logo.png')
+if not os.path.exists(LOGO_PATH):
+    LOGO_PATH = os.path.join(TICKET_DIR, 'logo.png')
 _LOGO_CACHE = {}
 
 METHOD_LABEL = {

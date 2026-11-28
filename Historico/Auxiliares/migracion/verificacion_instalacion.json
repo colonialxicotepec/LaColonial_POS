@@ -1,18 +1,24 @@
 {
-  "fecha": "2026-11-26 19:53:51",
+  "fecha": "2026-11-27 17:58:35",
   "carpeta": "D:\\LaColonial_POS",
-  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "python": "3.15.2 (tags/v3.15.2:5e58eaa, Oct 25 2026, 17:27:03) [MSC v.1951 64 bit (AMD64)]",
   "resultados": [
     {
       "nombre": "Python 3.9 o superior",
       "ok": true,
-      "detalle": "3.12.10 — portable",
+      "detalle": "3.15.2 — instalado en el sistema",
       "critico": true
     },
     {
       "nombre": "Archivos del proyecto completos",
       "ok": true,
-      "detalle": "13 archivos",
+      "detalle": "18 archivos",
+      "critico": true
+    },
+    {
+      "nombre": "Carpeta core/ presente",
+      "ok": true,
+      "detalle": "D:\\LaColonial_POS\\core",
       "critico": true
     },
     {
@@ -24,7 +30,7 @@
     {
       "nombre": "Tablas completas",
       "ok": true,
-      "detalle": "23 tablas",
+      "detalle": "24 tablas",
       "critico": true
     },
     {
@@ -34,9 +40,15 @@
       "critico": false
     },
     {
+      "nombre": "Proveedores accesibles",
+      "ok": true,
+      "detalle": "123 proveedores (118 activos)",
+      "critico": false
+    },
+    {
       "nombre": "Inventario cargado",
       "ok": true,
-      "detalle": "7,103 productos (7,102 activos)",
+      "detalle": "7,105 productos (7,104 activos)",
       "critico": true
     },
     {
@@ -48,7 +60,7 @@
     {
       "nombre": "Historial de ventas accesible",
       "ok": true,
-      "detalle": "1,017 ventas",
+      "detalle": "1,090 ventas",
       "critico": false
     },
     {
@@ -60,14 +72,14 @@
     {
       "nombre": "Espacio en disco",
       "ok": true,
-      "detalle": "1800.3 GB libres",
+      "detalle": "1800.2 GB libres",
       "critico": true
     },
     {
       "nombre": "Servidor de caja activo",
-      "ok": false,
-      "detalle": "no está corriendo (es normal si aún no abriste caja.bat)",
-      "critico": false
+      "ok": true,
+      "detalle": "http://127.0.0.1:8090",
+      "critico": true
     },
     {
       "nombre": "Impresoras detectadas",

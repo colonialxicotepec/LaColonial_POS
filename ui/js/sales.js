@@ -203,7 +203,64 @@ function handleScanEnter() {
 }
 
 /* ------------------------------------------------------------ carrito UI */
+function captureCartFocus() {
+  const active = document.activeElement;
+  const box = $('cartLines');
+  if (!active || !box || !box.contains(active)) return null;
+  if (active.matches('.qty-input')) {
+    return {
+      type: 'qty',
+      index: Number(active.dataset.qty),
+      start: active.selectionStart,
+      end: active.selectionEnd,
+    };
+  }
+  for (const [type, attribute] of [
+    ['inc', 'data-inc'],
+    ['dec', 'data-dec'],
+    ['remove', 'data-remove'],
+  ]) {
+    if (active.hasAttribute(attribute)) {
+      return { type, index: Number(active.getAttribute(attribute)) };
+    }
+  }
+  return null;
+}
+
+function restoreCartFocus(focus) {
+  if (!focus) return;
+  const box = $('cartLines');
+  if (!box) return;
+  const attributes = { inc: 'data-inc', dec: 'data-dec', remove: 'data-remove' };
+  let target = focus.type === 'qty'
+    ? box.querySelector(`.qty-input[data-qty="${focus.index}"]`)
+    : box.querySelector(`[${attributes[focus.type]}="${focus.index}"]`);
+
+  // Si se eliminó la línea enfocada, conservar el foco en la cantidad más cercana.
+  if (!target) {
+    const quantities = Array.from(box.querySelectorAll('.qty-input'));
+    if (quantities.length) {
+      target = quantities[Math.min(focus.index, quantities.length - 1)];
+    }
+  }
+  if (!target) return;
+  target.focus();
+  if (focus.type === 'qty' && 'selectionStart' in target) {
+    const length = target.value.length;
+    const start = Math.min(focus.start == null ? length : focus.start, length);
+    const end = Math.min(focus.end == null ? start : focus.end, length);
+    target.setSelectionRange(start, end);
+  }
+}
+
+function quantityStep(item) {
+  const unit = String((item && item.unit) || '').trim().toLowerCase();
+  const symbol = String((item && item.unit_symbol) || '').trim().toLowerCase();
+  return unit === 'kilogramo' || unit === 'kg' || symbol === 'kg' ? 0.1 : 1;
+}
+
 function renderCart() {
+  const focus = captureCartFocus();
   const box = $('cartLines');
   if (!S.cart.length) {
     box.innerHTML = `<div class="cart-empty">
@@ -253,12 +310,18 @@ function renderCart() {
     $('payBtn').innerHTML = 'DESPACHAR <kbd>F4</kbd>';
     $('payBtn').title = 'Despachar y generar ticket para pagar en caja (F4)';
   }
+  restoreCartFocus(focus);
 }
 
-function changeQty(index, delta) {
+function changeQty(index, delta, rawValue) {
   const item = S.cart[index];
   if (!item) return;
-  const next = round2(item.qty + delta);
+  let base = Number(item.qty) || 0;
+  if (rawValue !== undefined && rawValue !== null && String(rawValue).trim() !== '') {
+    const parsed = Number(String(rawValue).replace(',', '.'));
+    if (Number.isFinite(parsed) && parsed >= 0) base = parsed;
+  }
+  const next = round2(base + delta);
   if (next < 0.01) {
     S.cart.splice(index, 1);
   } else {

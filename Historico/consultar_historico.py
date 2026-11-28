@@ -973,7 +973,7 @@ class Handler(SimpleHTTPRequestHandler):
                 tipo = 'todos'
             include_deleted = (params.get('eliminados') or ['1'])[0] not in ('0', 'false', 'no')
             try:
-                limit = min(int((params.get('limit') or [MAX_RESULTS])[0]), 200)
+                limit = min(int((params.get('limit') or [MAX_RESULTS])[0]), 2000)
             except ValueError:
                 limit = MAX_RESULTS
             self._send_json(CATALOG.search_thirds(query, tipo, limit, include_deleted))

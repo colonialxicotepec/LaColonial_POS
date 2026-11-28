@@ -168,12 +168,14 @@ def integrate_db(destino: Path) -> None:
 
 
 # --------------------------------------------------------------------------
-# Codigo (se toma de los archivos que ya versiona el repo principal)
+# Codigo (archivos rastreados y nuevos no ignorados del repo principal)
 # --------------------------------------------------------------------------
 def copy_code(git: str, destino: Path) -> int:
     clear_dir(destino)
     try:
-        out = run([git, "-C", str(APP_DIR), "ls-files"], check=True)
+        # Incluye también archivos nuevos todavía no confirmados. Así un
+        # respaldo no queda incompleto justo después de agregar un módulo.
+        out = run([git, "-C", str(APP_DIR), "ls-files", "--cached", "--others", "--exclude-standard"], check=True)
     except RuntimeError:
         out = ""
     files = [f for f in out.splitlines() if f.strip()]

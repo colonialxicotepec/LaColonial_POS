@@ -106,14 +106,19 @@ function wire() {
   });
   $('cartLines').addEventListener('keydown', (e) => {
     if (!e.target.matches('.qty-input')) return;
-    if (e.key === 'Enter') {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const index = Number(e.target.dataset.qty);
+      const item = S.cart[index];
+      if (!item) return;
+      const step = quantityStep(item);
+      changeQty(index, e.key === 'ArrowUp' ? step : -step, e.target.value);
+    } else if (e.key === 'Enter') {
       e.preventDefault();
       commitQty(Number(e.target.dataset.qty), e.target.value);
-      focusScan();
     } else if (e.key === 'Escape') {
       e.preventDefault();
       renderCart();
-      focusScan();
     }
   });
   $('cartLines').addEventListener('change', (e) => {
@@ -425,6 +430,47 @@ function wire() {
     openModal('menuModal');
   });
   $('customersBtn').addEventListener('click', () => openCustomers('browse'));
+  $('proveedoresBtn').addEventListener('click', () => {
+    closeModal('menuModal');
+    openProveedores();
+  });
+  $('proveedoresSearch').addEventListener('input', scheduleProveedoresSearch);
+  $('proveedoresSearch').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      clearTimeout(proveedoresSearchTimer);
+      loadProveedores();
+    }
+  });
+  $('proveedoresIncludeDeleted').addEventListener('change', loadProveedores);
+  $('proveedorNewBtn').addEventListener('click', () => openProveedorForm(null));
+  $('proveedorCancelFormBtn').addEventListener('click', () => {
+    $('proveedorFormWrap').hidden = true;
+    $('proveedorForm').reset();
+    $('proveedoresStatus').textContent = '';
+    $('proveedoresSearch').focus();
+  });
+  $('proveedorForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    saveProveedor();
+  });
+  $('proveedoresBody').addEventListener('click', (e) => {
+    if (!canManage() || S.busy) return;
+    const editBtn = e.target.closest('[data-prov-edit]');
+    if (editBtn) {
+      const id = Number(editBtn.dataset.provEdit);
+      const prov = (S.proveedorRows || []).find((p) => Number(p.id) === id);
+      if (prov) openProveedorForm(prov);
+      return;
+    }
+    const delBtn = e.target.closest('[data-prov-del]');
+    if (delBtn) {
+      deleteProveedor(Number(delBtn.dataset.provDel));
+      return;
+    }
+    const reactivateBtn = e.target.closest('[data-prov-reactivate]');
+    if (reactivateBtn) reactivateProveedor(Number(reactivateBtn.dataset.provReactivate));
+  });
   $('testPrintBtn').addEventListener('click', testPrint);
   if ($('printerChip')) $('printerChip').addEventListener('click', openPrinterModal);
   if ($('localPrinterSaveBtn')) $('localPrinterSaveBtn').addEventListener('click', saveLocalPrinter);
@@ -474,6 +520,9 @@ function wire() {
       return;
     }
     if (!$('posMain').hidden) {
+      const active = document.activeElement;
+      const interactive = !!(active && active.matches
+        && active.matches('input, textarea, select, button, a, [contenteditable]'));
       if (e.key === 'F2') { e.preventDefault(); focusScan(); }
       else if (e.key === 'F4' && !modal) { e.preventDefault(); openPayment(); }
       else if (e.key === 'F6' && !modal && isCashRegister()) { e.preventDefault(); openPendingSales(); }
@@ -481,8 +530,8 @@ function wire() {
       else if (e.key === 'F8' && !modal) { e.preventDefault(); clearCart(false); }
       else if (e.key === 'F9' && !modal) { e.preventDefault(); openSales(); }
       else if (e.key === 'F10' && !modal) { e.preventDefault(); openInventory(); }
-      else if (e.key.length === 1 && !modal && document.activeElement !== $('scan')
-        && document.activeElement.tagName !== 'INPUT') {
+      else if (e.key.length === 1 && !modal && active !== $('scan') && !interactive) {
+        e.preventDefault();
         $('scan').focus();
       }
     }
@@ -490,13 +539,15 @@ function wire() {
 
   window.addEventListener('focus', () => {
     const active = document.activeElement;
-    if (active && active.classList && active.classList.contains('qty-input')) return;
+    if (active && active.matches
+      && active.matches('input, textarea, select, button, a, [contenteditable]')) return;
     focusScan();
   });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshQuiet(); });
   document.addEventListener('click', (e) => {
     if (e.target.closest('.overlay') || $('posMain').hidden) return;
-    if (e.target.matches('input, select, textarea')) return;
+    if (e.target.closest('#cartLines')) return;
+    if (e.target.matches('input, select, textarea, button, a, [contenteditable]')) return;
     focusScan();
   });
 }

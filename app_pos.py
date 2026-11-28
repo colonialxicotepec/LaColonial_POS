@@ -114,6 +114,19 @@ class Handler(SimpleHTTPRequestHandler):
                 return
             self.send_error(404)
             return
+        if parsed.path == '/pos/logo.ico':
+            ico = os.path.join(BASE_DIR, 'logo.ico')
+            if os.path.exists(ico):
+                with open(ico, 'rb') as fh:
+                    body = fh.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'image/x-icon')
+                self.send_header('Content-Length', str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            self.send_error(404)
+            return
         if parsed.path.startswith('/pos/ticket/'):
             self._ticket_page(parsed)
             return

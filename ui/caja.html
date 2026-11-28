@@ -10,27 +10,31 @@
 
 <header class="topbar">
   <div class="brand">
-    <span class="logo">LC</span>
+    <span class="logo"><img src="/pos/logo.ico" alt="La Colonial" style="width:28px;height:28px;border-radius:6px;"></span>
     <div class="brand-text">
       <h1>La Colonial</h1>
       <p>Caja</p>
     </div>
   </div>
   <div class="topinfo">
-    <span class="chip" id="userChip">Sin sesión</span>
-    <span class="chip" id="shiftChip">Turno —</span>
-    <span class="chip strong" id="todayChip">Hoy $0.00</span>
-    <span class="chip" id="printerChip" style="cursor:pointer" title="Configurar impresora de esta computadora">🖨 —</span>
-    <span class="chip clock" id="clock">--:--</span>
-    <button class="ghost small notifbtn" id="pendingBtn" hidden title="Tickets despachados pendientes de cobro (F6)">
-      Por cobrar <span class="notifbadge" id="pendingBadge" hidden>0</span>
-    </button>
-    <button class="ghost small" id="invBtn" hidden title="Inventario (F10)">Inventario</button>
-    <button class="ghost small" id="xicoParkBtn" hidden title="Caja independiente XICO-PARK">XICO-PARK</button>
-    <button class="ghost small notifbtn" id="notifBtn" title="Notificaciones de inventario">
-      Avisos <span class="notifbadge" id="notifBadge" hidden>0</span>
-    </button>
-    <button class="ghost small" id="menuBtn" title="Menú de caja">Menú</button>
+    <div class="topmeta" aria-label="Estado de la caja">
+      <span class="chip" id="userChip">Sin sesión</span>
+      <span class="chip" id="shiftChip">Turno —</span>
+      <span class="chip strong" id="todayChip">Hoy $0.00</span>
+      <span class="chip" id="printerChip" style="cursor:pointer" title="Configurar impresora de esta computadora">🖨 —</span>
+      <span class="chip clock" id="clock">--:--</span>
+    </div>
+    <div class="topactions" aria-label="Acciones rápidas">
+      <button class="ghost small notifbtn" id="pendingBtn" hidden title="Tickets despachados pendientes de cobro (F6)">
+        Por cobrar <span class="notifbadge" id="pendingBadge" hidden>0</span>
+      </button>
+      <button class="ghost small" id="invBtn" hidden title="Inventario (F10)">Inventario</button>
+      <button class="ghost small" id="xicoParkBtn" hidden title="Caja independiente XICO-PARK">XICO-PARK</button>
+      <button class="ghost small notifbtn" id="notifBtn" title="Notificaciones de inventario">
+        Avisos <span class="notifbadge" id="notifBadge" hidden>0</span>
+      </button>
+      <button class="ghost small" id="menuBtn" title="Menú de caja">Menú</button>
+    </div>
   </div>
 </header>
 
@@ -55,7 +59,7 @@
     <div class="cartcustomer">
       <div id="cartCustomerLabel" class="cartcustomer-label">Venta sin cliente asociado</div>
       <div class="cartcustomer-actions">
-        <button id="chooseCustomerBtn" class="ghost small">Asignar cliente</button>
+        <button id="chooseCustomerBtn" class="ghost small mgmt">Asignar cliente</button>
         <button id="clearCustomerBtn" class="link small" hidden>Quitar</button>
       </div>
     </div>
@@ -66,10 +70,10 @@
       <div class="trow total"><span>Total</span><b id="tTotal">$0.00</b></div>
       <button id="payBtn" class="paybtn">COBRAR <kbd>F4</kbd></button>
       <div class="secondary">
-        <button id="pendingCartBtn" class="ghost" hidden>Por cobrar <span class="notifbadge" id="pendingCartBadge" hidden>0</span> <kbd>F6</kbd></button>
-        <button id="salesBtn" class="ghost">Ventas del día <kbd>F9</kbd></button>
-        <button id="cashMoveBtn" class="ghost">Entradas / Salidas <kbd>F7</kbd></button>
-        <button id="closeShiftBtn" class="ghost">Corte de caja</button>
+        <button id="pendingCartBtn" class="ghost mgmt" hidden>Por cobrar <span class="notifbadge" id="pendingCartBadge" hidden>0</span> <kbd>F6</kbd></button>
+        <button id="salesBtn" class="ghost mgmt">Ventas del día <kbd>F9</kbd></button>
+        <button id="cashMoveBtn" class="ghost mgmt">Entradas / Salidas <kbd>F7</kbd></button>
+        <button id="closeShiftBtn" class="ghost mgmt">Corte de caja</button>
       </div>
     </div>
   </aside>
@@ -78,7 +82,7 @@
 <!-- ============================ Login / PIN ============================ -->
 <div id="loginScreen" class="overlay">
   <div class="panel login" id="loginPanel">
-    <div class="panelbrand"><span class="logo big">LC</span></div>
+    <div class="panelbrand"><img src="/pos/logo.png" alt="La Colonial" style="width:64px;height:64px;border-radius:12px;"></div>
     <h2 id="loginTitle">Entrar a caja</h2>
     <p id="loginSub" class="muted">Escribe tu PIN y presiona Entrar.</p>
     <div id="pinDots" class="pindots" aria-label="PIN capturado"></div>
@@ -644,6 +648,74 @@
   </div>
 </div>
 
+<!-- ============================ Proveedores ============================ -->
+<div id="proveedoresModal" class="overlay" hidden>
+  <div class="panel wide customers-panel">
+    <div class="modalhead">
+      <div>
+        <h2>Proveedores</h2>
+        <p id="proveedoresSubtitle" class="muted small">Consulta proveedores.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="proveedorNewBtn" class="primary" type="button" hidden>+ Nuevo proveedor</button>
+        <button class="ghost" data-close="proveedoresModal">Cerrar <kbd>Esc</kbd></button>
+      </div>
+    </div>
+    <div class="customer-searchbar">
+      <input id="proveedoresSearch" type="text" autocomplete="off"
+             placeholder="Buscar por empresa, contacto, RFC, teléfono o correo…"
+             aria-label="Buscar proveedor">
+      <label class="customer-deleted-toggle">
+        <input id="proveedoresIncludeDeleted" type="checkbox">
+        <span>Incluir inactivos</span>
+      </label>
+    </div>
+    <div id="proveedoresStatus" class="muted small" aria-live="polite"></div>
+
+    <div id="proveedorFormWrap" class="card" hidden style="margin:10px 0;padding:12px;border:1px solid var(--border,#ddd);border-radius:8px;">
+      <form id="proveedorForm">
+        <h3 id="proveedorFormTitle" style="margin-top:0;">Nuevo proveedor</h3>
+        <input type="hidden" id="provId">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;">
+          <div><label for="provEmpresa">Empresa / Razón social *</label><input id="provEmpresa" type="text" required></div>
+          <div><label for="provNombre">Nombre contacto</label><input id="provNombre" type="text"></div>
+          <div><label for="provApellido">Apellido contacto</label><input id="provApellido" type="text"></div>
+          <div><label for="provRfc">RFC</label><input id="provRfc" type="text" style="text-transform:uppercase;"></div>
+          <div><label for="provTelefono">Teléfono</label><input id="provTelefono" type="text"></div>
+          <div><label for="provEmail">Email</label><input id="provEmail" type="email"></div>
+          <div><label for="provDireccion">Dirección</label><input id="provDireccion" type="text"></div>
+          <div><label for="provCiudad">Ciudad</label><input id="provCiudad" type="text"></div>
+          <div><label for="provEstado">Estado</label><input id="provEstado" type="text"></div>
+          <div><label for="provCp">CP</label><input id="provCp" type="text"></div>
+          <div><label for="provSaldo">Saldo</label><input id="provSaldo" type="number" step="0.01" value="0"></div>
+          <div><label for="provNotas">Notas</label><input id="provNotas" type="text"></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+          <button id="proveedorCancelFormBtn" class="ghost" type="button">Cancelar</button>
+          <button id="proveedorSaveBtn" class="primary" type="submit">Guardar proveedor</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="tablewrap customers-results-wrap" style="max-height:52vh;overflow:auto;">
+      <table class="customers-table">
+        <thead>
+          <tr>
+            <th>Empresa</th>
+            <th>Contacto</th>
+            <th>RFC</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="proveedoresBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- ============================ Menú ============================ -->
 <div id="menuModal" class="overlay" hidden>
   <div class="panel">
@@ -652,17 +724,30 @@
       <button class="ghost" data-close="menuModal">Cerrar <kbd>Esc</kbd></button>
     </div>
     <div class="menulist">
-      <button id="cashMoveMenuBtn">Entradas y salidas de efectivo (F7)</button>
-      <button id="testPrintBtn">Probar impresora</button>
-      <button id="reprintBtn" hidden>Reimprimir último ticket</button>
-      <button id="exportBtn2">Exportar ventas de hoy (CSV)</button>
-      <button id="pricesBtn">Precios de emergencia</button>
-      <button id="customersBtn">Consultar clientes</button>
-      <button id="usersBtn">Usuarios</button>
-      <button id="unitsBtn">Unidades de venta</button>
-      <button id="backupBtn">Respaldar la caja ahora</button>
-      <button id="changePinBtn">Cambiar mi PIN</button>
-      <button id="logoutBtn" class="danger-soft">Cerrar sesión</button>
+      <section class="menusection">
+        <h3>Operación</h3>
+        <button id="cashMoveMenuBtn">Entradas y salidas de efectivo <kbd>F7</kbd></button>
+        <button id="exportBtn2">Exportar ventas de hoy (CSV)</button>
+        <button id="reprintBtn" hidden>Reimprimir último ticket</button>
+      </section>
+      <section class="menusection">
+        <h3>Catálogos</h3>
+        <button id="pricesBtn">Precios de emergencia</button>
+        <button id="customersBtn">Consultar clientes</button>
+        <button id="proveedoresBtn">Proveedores</button>
+        <button id="unitsBtn">Unidades de venta</button>
+      </section>
+      <section class="menusection">
+        <h3>Administración</h3>
+        <button id="usersBtn">Usuarios</button>
+        <button id="backupBtn">Respaldar la caja ahora</button>
+        <button id="changePinBtn">Cambiar mi PIN</button>
+      </section>
+      <section class="menusection">
+        <h3>Soporte</h3>
+        <button id="testPrintBtn">Probar impresora</button>
+        <button id="logoutBtn" class="danger-soft">Cerrar sesión</button>
+      </section>
     </div>
     <div id="menuStatus" class="printstatus"></div>
     <div id="priceList" class="pricelist" hidden></div>
@@ -762,6 +847,7 @@
 <script src="js/inventory.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/xico_park.js"></script>
+<script src="js/suppliers.js"></script>
 <script src="js/init.js"></script>
 </body>
 </html>

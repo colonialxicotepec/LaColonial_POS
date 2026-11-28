@@ -25,7 +25,9 @@ DIST_DIR = os.path.join(BASE_DIR, 'dist')
 # archivos que deben viajar en el paquete
 ESPERADOS = [
     'app_pos.py', 'catalogo.py', 'pos_api.py', 'pos_core.py', 'pos_print.py',
+    'logo.ico', 'ui/logo.png',
     'verificar_instalacion.py', 'empaquetar_proyecto.py',
+    'core/suppliers.py', 'importar_proveedores.py', 'ui/js/suppliers.js',
     'reiniciar_caja.py', 'restaurar_respaldo.py',
     'pos_config.json',
     'caja.bat', 'caja_en_red.bat', 'abrir_puerto_firewall.bat',
@@ -38,7 +40,7 @@ ESPERADOS = [
 ]
 
 # carpetas que deben viajar completas
-CARPETAS = ['ui', 'runtime', 'vendor', 'Historico']
+CARPETAS = ['core', 'ui', 'runtime', 'vendor', 'Historico']
 
 problemas = []
 
@@ -71,6 +73,10 @@ def resumen_db(path):
                             ('stock_movements', 'id, product_id, kind, qty'),
                             ('shifts', 'id, status'),
                             ('items', 'item_id, name'),
+                            ('proveedores', 'id, legacy_id, empresa, nombre_contacto, '
+                                            'apellido_contacto, rfc, telefono, email, '
+                                            'direccion, ciudad, estado, cp, saldo, notas, '
+                                            'activo, origen, creado_en, actualizado_en'),
                             ('sales', 'sale_id, total')):
             try:
                 rows = conn.execute(f'SELECT {cols} FROM {tabla}').fetchall()
@@ -151,15 +157,24 @@ def main():
         if 'MANIFIESTO.txt' in entradas:
             lineas = entradas['MANIFIESTO.txt'].decode('utf-8', 'replace').splitlines()
             mal = 0
+            declarados = set()
             for linea in lineas:
                 if '  ' not in linea:
                     continue
                 huella, nombre = linea.split('  ', 1)
                 nombre = nombre.strip()
-                if nombre in entradas and sha256_bytes(entradas[nombre]) != huella:
+                declarados.add(nombre)
+                if nombre not in entradas or sha256_bytes(entradas[nombre]) != huella:
                     mal += 1
+            sin_manifiesto = set(entradas) - declarados - {
+                'MANIFIESTO.txt', 'LEEME-INSTALACION.txt',
+            }
+            if sin_manifiesto:
+                mal += len(sin_manifiesto)
+                problemas.append('Faltan en el MANIFIESTO: ' +
+                                 ', '.join(sorted(sin_manifiesto)))
             if mal:
-                problemas.append(f'{mal} huellas del MANIFIESTO no coinciden')
+                problemas.append(f'{mal} discrepancias en el MANIFIESTO')
             print(f'  [OK   ] MANIFIESTO.txt verificado' if not mal
                   else f'  [FALLA] MANIFIESTO con {mal} discrepancias')
         else:
@@ -183,8 +198,12 @@ def main():
                 if not os.path.exists(real):
                     real = os.path.join(BASE_DIR, os.path.basename(db))
                 b = resumen_db(real)
-                iguales = a == b
-                if not iguales:
+                proveedores_ok = db != 'pos.db' or (
+                    'proveedores' in a and 'proveedores' in b)
+                if not proveedores_ok:
+                    problemas.append(f'{db}: falta la tabla proveedores en el ZIP o en el proyecto')
+                iguales = a == b and proveedores_ok
+                if not iguales and proveedores_ok:
                     problemas.append(f'{db}: el contenido del ZIP difiere del proyecto')
                 detalle = ', '.join(f'{t}={v[0]}' for t, v in a.items() if isinstance(v, tuple))
                 print(f'  [{"OK   " if iguales else "FALLA"}] {os.path.basename(db)}: {detalle}')

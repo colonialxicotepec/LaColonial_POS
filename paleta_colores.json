@@ -1,0 +1,39 @@
+{
+  "logo": "tickets/logo.png",
+  "dimensiones": {
+    "ancho": 960,
+    "alto": 960
+  },
+  "colores": {
+    "fondo": {
+      "nombre": "Blanco",
+      "rgb": [255, 255, 255],
+      "hex": "#FFFFFF"
+    },
+    "primario": {
+      "nombre": "Azul",
+      "rgb": [0, 108, 181],
+      "hex": "#006CB5",
+      "variante_clara": {
+        "rgb": [0, 160, 227],
+        "hex": "#00A0E3"
+      }
+    },
+    "acento_amarillo": {
+      "nombre": "Amarillo",
+      "rgb": [255, 204, 0],
+      "hex": "#FFCC00"
+    },
+    "acento_rojo": {
+      "nombre": "Rojo",
+      "rgb": [227, 30, 36],
+      "hex": "#E31E24"
+    },
+    "acento_verde": {
+      "nombre": "Verde",
+      "rgb": [149, 193, 43],
+      "hex": "#95C12B"
+    }
+  },
+  "notas": "Paleta extraída del logotipo de La Colonial (tickets/logo.png)."
+}

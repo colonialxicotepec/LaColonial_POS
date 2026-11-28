@@ -21,7 +21,8 @@ funcionar.
 | **Impresión** | Tickets térmicos de 80 mm (POS-80) con el total en doble tamaño y corte de papel; también imprime el corte de caja. |
 | **Corte de caja** | Turnos por cajero, arqueo por denominación, entradas/salidas de efectivo y reportes de ventas. |
 | **Usuarios y roles** | Administrador, gerente y cajero con PIN; hasta 8 usuarios activos. |
-| **Respaldo automático** | Copia de la base cada 60 minutos con retención configurable. |
+| **Proveedores** | Catálogo local con contacto, RFC, saldo y estado; importación idempotente desde el histórico. |
+| **Respaldo automático** | Copia consistente de la base cada 4 horas si hubo ventas nuevas, con retención configurable. |
 | **Catálogo** | Importación desde CSV/Excel, categorías, ubicaciones y precios de emergencia. |
 | **Módulo histórico (ETL)** | Sincronización y saneamiento del inventario que venía del sistema anterior (MySQL `1box`). |
 
@@ -59,8 +60,9 @@ externas**: sólo la biblioteca estándar (`http.server`, `sqlite3`, `wintypes`)
 
 4. Abre <http://127.0.0.1:8090/pos> e inicia sesión con tu PIN.
 
-La base `pos.db` se crea sola con su esquema la primera vez. Para cargar el
-catálogo inicial usa `Historico\Auxiliares\importar_inventario.bat`.
+La base `pos.db` se crea sola con el **esquema v11 (23 tablas)** la primera
+vez, incluida la tabla `proveedores`. Para cargar el catálogo inicial usa
+`Historico\Auxiliares\importar_inventario.bat`.
 
 > Guía completa, paso a paso y sin conexión: **[`INSTALACION.md`](INSTALACION.md)**
 
@@ -76,6 +78,7 @@ catálogo inicial usa `Historico\Auxiliares\importar_inventario.bat`.
 | Imprimir un ticket suelto | **`impresora.bat`** |
 | Actualizar el catálogo | **`Historico\Auxiliares\actualizar_inventario.bat`** |
 | Verificar la instalación | **`verificar_instalacion.bat`** |
+| Gestionar proveedores | **Menú → Proveedores** (consultar; gerente/administrador modifica) |
 | Empaquetar para otra computadora | **`empaquetar_proyecto.bat`** |
 
 Por omisión la caja **sólo escucha en `127.0.0.1`** (esta computadora). Exponerla
@@ -84,6 +87,36 @@ restringir por equipo con la lista `allowed_ips`.
 
 Detalle de operación: **[`README_POS.md`](README_POS.md)** · Atajos y recetas:
 **[`MANUAL_RAPIDO.md`](MANUAL_RAPIDO.md)**
+
+### Proveedores e importación
+
+En **Menú → Proveedores** se busca por empresa, contacto, RFC, teléfono o
+correo; **Incluir dados de baja** muestra también los inactivos. Cualquier
+usuario con sesión puede consultar. Sólo **gerente** o **administrador** puede
+crear, editar o desactivar; la baja es lógica y cada cambio queda en `audit`.
+
+| Método | Endpoint | Permiso |
+|---|---|---|
+| GET | `/api/pos/proveedores` | Sesión activa |
+| GET | `/api/pos/proveedor?id=...` | Sesión activa |
+| POST | `/api/pos/proveedores/create` | Gerente o administrador |
+| POST | `/api/pos/proveedores/update` | Gerente o administrador |
+| POST | `/api/pos/proveedores/delete` | Gerente o administrador |
+
+Para traer los proveedores de `Historico/historico_1box.db`:
+
+```powershell
+runtime\python.exe importar_proveedores.py --dry-run
+runtime\python.exe importar_proveedores.py
+```
+
+El origen se abre en **solo lectura**. La importación crea y verifica un
+respaldo consistente de `pos.db` y actualiza por `legacy_id` en una transacción.
+Por defecto sólo completa campos vacíos y conserva los datos locales (incluidos
+saldo, estado y notas). `--sobrescribir` permite reemplazar los campos
+administrados, saldo y activo; las notas siempre se conservan. Los valores
+inválidos se omiten y se reportan. Es idempotente y puede correr con la caja
+abierta.
 
 ---
 
@@ -98,11 +131,15 @@ LaColonial_POS/
 ├── impresora_local.py      # Puente de impresión local
 ├── catalogo.py             # Búsqueda y normalización del catálogo
 ├── importar_clientes.py    # Importación de clientes desde el histórico
+├── importar_proveedores.py # Importación idempotente de proveedores
+├── core/suppliers.py       # Consulta y mantenimiento local de proveedores
 ├── reiniciar_caja.py       # Reinicio controlado del turno/caja
 ├── restaurar_respaldo.py   # Restauración de respaldos
 ├── verificar_instalacion.py / verificar_paquete.py
 ├── empaquetar_proyecto.py  # Empaquetado para otra computadora
+├── tests/test_packaging.py # Regresiones de paquete y ruta de tickets
 ├── ui/                     # Interfaz web (HTML/CSS/JS) de la caja
+├── tickets/logo.png        # Logo de impresión; los tickets sí se excluyen
 ├── pos_config.json         # Configuración local de la tienda
 ├── pos_config.example.json # Plantilla de configuración (sin datos reales)
 ├── Historico/              # Módulo ETL y consultas del inventario histórico
@@ -146,9 +183,9 @@ Por seguridad y tamaño, el repositorio **no** incluye datos operativos:
 
 | Excluido | Contenido |
 |---|---|
-| `pos.db` | Ventas, productos, existencias, clientes y usuarios. |
+| `pos.db` | Ventas, productos, existencias, clientes, proveedores y usuarios. |
 | `backups/` | Respaldos automáticos y manuales de la base. |
-| `tickets/` | Tickets generados. |
+| `tickets/` | Tickets generados. La excepción es el recurso estático `tickets/logo.png`, que sí se incluye en el paquete si existe. |
 | `Historico/Auxiliares/*.csv`, `*.xlsx`, `*.db` | Inventarios congelados y catálogos extraídos. |
 | `runtime/`, `vendor/` | Python portable y dependencias. |
 | `*.log`, `__pycache__/` | Registros y caché. |

@@ -22,6 +22,7 @@ Punto de venta **propio**, local y autónomo. El inventario vive dentro del POS
 | Devoluciones | **Sí**: por ticket, totales o parciales, con motivo y PIN de gerente/administrador. |
 | Altas y bajas | En el POS: **alta de producto**, **baja (desactivar)**, **alta/baja de existencias** y **edición de stock**, todo con usuario, fecha y hora. |
 | Usuarios | Hasta **8** activos. Roles: **administrador**, **gerente** y **cajero**. |
+| Proveedores | Catálogo propio en `pos.db` (esquema v11). Todos con sesión consultan; gerente/administrador crean, editan o desactivan. |
 | Cajas | **Una sola caja**, una sola sucursal. |
 | Red local | La caja **sólo responde en esta computadora** (`127.0.0.1`). Para entrar desde otro equipo de la red hay que abrirla con `caja_en_red.bat` (o `"allow_lan": true` en `pos_config.json`), y se puede restringir por IP con `allowed_ips`. Ver `INSTALACION.md` §7-bis. |
 
@@ -62,9 +63,9 @@ la ventana mientras haya una venta a medias.**
 
 | Rol | Puede |
 |---|---|
-| **Administrador** | Todo: ventas, turnos, cortes, cancelaciones y devoluciones, inventario, **alta/reactivación/baja de productos**, precios de emergencia, respaldos, bitácora y **administración de usuarios** (alta, baja, cambio de rol y PIN). |
-| **Gerente** | Las mismas operaciones que el administrador (ventas, turnos, cortes, cancelaciones y devoluciones con su PIN, inventario, precios de emergencia, respaldos y bitácora), **excepto administrar usuarios y dar de baja/reactivar productos**. |
-| **Cajero** | Cobrar, abrir/cerrar turno, consultar ventas del día. No ajusta inventario, no cancela ni devuelve sin autorización y no ve la bitácora. |
+| **Administrador** | Todo: ventas, turnos, cortes, cancelaciones y devoluciones, inventario, **alta/reactivación/baja de productos**, precios de emergencia, respaldos, bitácora, **proveedores** y **administración de usuarios** (alta, baja, cambio de rol y PIN). |
+| **Gerente** | Las mismas operaciones que el administrador (ventas, turnos, cortes, cancelaciones y devoluciones con su PIN, inventario, precios de emergencia, respaldos, bitácora y **proveedores**), **excepto administrar usuarios y dar de baja/reactivar productos**. |
+| **Cajero** | Cobrar, abrir/cerrar turno, consultar ventas del día y **consultar proveedores**. No ajusta inventario, no crea/edita/desactiva proveedores, no cancela ni devuelve sin autorización y no ve la bitácora. |
 
 > **Sólo el administrador** da de alta usuarios, los desactiva y cambia su rol
 > o PIN. Si se olvida un PIN, el administrador lo restablece desde
@@ -226,6 +227,48 @@ en una transacción. Se puede ejecutar con la caja abierta; no cierra el turno.
 Después de desplegar el nuevo código, hay que reiniciar el proceso del servidor
 para que active las rutas de clientes. Ese reinicio no hace corte de caja: el
 turno y su fondo siguen guardados.
+
+### Proveedores
+
+**Menú → Proveedores** permite buscar por empresa, nombre/apellido de contacto,
+RFC, teléfono o correo. Activa **Incluir dados de baja** para consultar también
+los inactivos.
+
+- **Todos los usuarios con sesión** pueden consultar el catálogo y la ficha.
+- **Gerente y administrador** pueden usar **Nuevo proveedor**, **Editar** y
+  **Eliminar**. Eliminar significa **desactivar**, no borrar el registro.
+- Cada alta, edición o baja se audita con usuario y fecha.
+- El `saldo` y los datos importados son informativos: todavía no son un módulo
+  operativo de compras ni de cuentas por pagar.
+
+| Método | Endpoint | Quién puede |
+|---|---|---|
+| GET | `/api/pos/proveedores?q=...&eliminados=0&limit=200` | Cualquier usuario con sesión |
+| GET | `/api/pos/proveedor?id=...` | Cualquier usuario con sesión |
+| POST | `/api/pos/proveedores/create` | Gerente o administrador |
+| POST | `/api/pos/proveedores/update` | Gerente o administrador |
+| POST | `/api/pos/proveedores/delete` | Gerente o administrador |
+
+Para importar o actualizar desde el histórico:
+
+```text
+runtime\python.exe importar_proveedores.py --dry-run
+runtime\python.exe importar_proveedores.py
+```
+
+El importador abre `Historico/historico_1box.db` en **solo lectura**, crea un
+respaldo consistente y verificado de `pos.db`, y actualiza en una transacción
+por `legacy_id`. Es idempotente: repetirlo no duplica proveedores.
+
+- Por defecto sólo completa campos vacíos: conserva empresa, contacto, RFC,
+  teléfono, correo, dirección, saldo, notas y estado ya capturados en el POS.
+- `--sobrescribir` reemplaza los campos administrados, saldo y activo; las
+  notas locales siempre se conservan. Los proveedores nuevos importados como
+  dados de baja quedan inactivos.
+- Los RFC, correos y teléfonos inválidos no se inventan: se omiten y se reportan
+  en el dry-run y en la auditoría.
+- Puede ejecutarse con la caja abierta. `--dry-run` sólo lee y muestra el plan;
+  no modifica `pos.db`.
 
 ### Cancelar
 - **Antes de cobrar:** quita la línea o vacía el carrito (F8). No requiere permiso.
@@ -477,7 +520,7 @@ aplica. También queda el método manual: guardar `pos.db` como
 
 ## 7. Qué guarda la caja (`pos.db`)
 
-El esquema actual es la **versión 6** y tiene **20 tablas**.
+El esquema actual es la **versión 11** y tiene **23 tablas**.
 
 | Tabla | Contenido |
 |---|---|
@@ -488,8 +531,12 @@ El esquema actual es la **versión 6** y tiene **20 tablas**.
 | `categories` / `locations` / `reasons` | Catálogos administrables de categorías, ubicaciones y motivos de movimiento |
 | `stock_movements` | **Historial de existencias**: tipo, cantidad, existencia antes/después, usuario, fecha y hora, motivo |
 | `shifts` | Turnos: fondo, apertura, cierre, esperado, contado, diferencia |
+| `shift_denoms` | Conteo físico por denominación del cierre de turno |
 | `sales` | Venta: folio diario, totales, cambio, estado, cancelación |
 | `sale_items` | Renglones con nombre, precio, costo y cantidad **congelados** (y el producto/factor de stock que movieron) |
+| `customers` | Clientes importados, contacto, saldo histórico y público general predeterminado |
+| `sale_customers` | Cliente asociado a cada venta, con copia de nombre/RFC |
+| `proveedores` | Proveedores: empresa, contacto, RFC, teléfono, correo, dirección, saldo, estado y `legacy_id` |
 | `payments` | Efectivo, tarjeta o transferencia (con referencia) |
 | `returns` / `return_items` | Devoluciones: folio `R-...`, ticket origen, motivo, forma y el producto/factor con que se repuso el stock |
 | `price_overrides` | Precios de emergencia (locales, temporales, con motivo y caducidad) |
@@ -612,10 +659,14 @@ El ajuste **no escribe en `1box`** y queda en la bitácora con quién lo hizo.
 | `caja_en_red.bat` | Abre la caja **accesible desde la red local** (imprime la dirección para entrar) |
 | `abrir_puerto_firewall.bat` | Abre el puerto 8090 en el firewall de Windows (como administrador) |
 | `instalar_python_portable.bat` | Deja Python 3.12 dentro de `runtime\` (sin instalar nada en Windows) |
-| `verificar_instalacion.bat` / `.py` | Auto-chequeo de la instalación (archivos, base, clientes, permisos, puerto, impresora) |
+| `verificar_instalacion.bat` / `.py` | Auto-chequeo de la instalación (archivos, `core/`, base, clientes, proveedores, permisos, puerto, impresora) |
 | `importar_clientes.py` | Importación segura e idempotente de clientes desde el histórico |
-| `empaquetar_proyecto.bat` / `.py` | Genera el ZIP portable para otra computadora |
-| `verificar_paquete.py` | Audita el ZIP contra el proyecto (archivo por archivo y base por base) |
+| `importar_proveedores.py` | Importa/actualiza proveedores desde el histórico, con respaldo y `--dry-run` |
+| `core/suppliers.py` | Consulta, alta, edición y baja lógica de proveedores |
+| `ui/js/suppliers.js` | Interfaz del catálogo de proveedores |
+| `tests/test_packaging.py` | Pruebas aisladas de distribución, manifiesto y ruta de tickets |
+| `empaquetar_proyecto.bat` / `.py` | Genera el ZIP portable para otra computadora; incluye `logo.ico`, proveedores y `tickets/logo.png` si existe |
+| `verificar_paquete.py` | Audita el ZIP contra el proyecto, el manifiesto de `pos.db` y el contenido de `proveedores` |
 | `reiniciar_caja.py` | Deja la caja como de fábrica (conserva el inventario, borra usuarios/ventas/turnos) |
 | `restaurar_respaldo.py` | Lista, verifica y restaura respaldos (`--listar`, `--verificar`, `--restaurar --confirmar`) |
 | `Historico/historico_1box.db` | Histórico del sistema anterior (solo consulta, reportes) |
@@ -659,6 +710,7 @@ El ajuste **no escribe en `1box`** y queda en la bitácora con quién lo hizo.
 - Escucha solo en `127.0.0.1` (8090, o el siguiente puerto libre).
 - Contraseñas de usuarios cifradas; sesiones con expiración.
 - Base en modo WAL con `synchronous=FULL` (prioriza no perder ventas).
+- Esquema **v11**, con **23 tablas**, incluida `proveedores`.
 - Las ventas se validan **en el servidor** contra el inventario: el navegador
   no puede inventar precios ni productos.
 - Inventario propio: **7,001 productos** (6,999 activos) al 18/11/2026.
@@ -678,6 +730,11 @@ exportación CSV · ticket imprimible · respaldo automático · bitácora compl
 - El catálogo se corrigió de codificación: acentos correctos
   (`Papelería y Escolares`, `Electrónica`, `Plásticos`…).
 
+Regresiones de distribución (`tests/test_packaging.py`): colecta selectiva de
+`tickets/logo.png`, inclusión de proveedores, manifiesto con el nombre final
+`pos.db`, ruta `/pos/ticket/<id>` y convivencia con `/pos/logo.ico`. Usan
+archivos y ventas ficticias; no leen ni modifican los datos reales del POS.
+
 ---
 
 ## 14. Estado del proyecto
@@ -685,7 +742,8 @@ exportación CSV · ticket imprimible · respaldo automático · bitácora compl
 1. **Hecho**: catálogo limpio migrado, caja operativa, inventario propio,
    ventas, devoluciones, movimientos de existencias, usuarios y roles, cortes,
    respaldos, exportación, **impresora térmica configurada** (POS-80 por USB,
-   80 mm, sin cajón) y conteo de denominaciones al cierre.
+   80 mm, sin cajón), conteo de denominaciones al cierre y **catálogo de
+   proveedores** con importación desde el histórico (esquema v11).
 2. **Pendiente de ti**: decidir si más adelante se conecta un **cajón de dinero**
    a la impresora (`open_drawer: true`) y si se quieres un **historial de cortes**
    consultable dentro de la app (hoy el corte se imprime y queda copiado en
@@ -696,4 +754,4 @@ exportación CSV · ticket imprimible · respaldo automático · bitácora compl
 
 ---
 
-*Fase 0 · 16/11/2026*
+*Fase 0 · Actualización de proveedores y distribución · 27/11/2026*

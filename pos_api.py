@@ -16,11 +16,12 @@ import traceback
 from urllib.parse import parse_qs, urlparse
 
 import pos_core
+from core import suppliers as suppliers_core
 import pos_print
 from core import xico_park
 from catalogo import norm
 
-APP_VERSION = '0.2.7'
+APP_VERSION = '0.2.8'
 MAX_BODY = 1_000_000
 ERROR_LOG = os.path.join(pos_core.BASE_DIR, 'pos_errores.log')
 
@@ -174,6 +175,10 @@ class PosAPI:
             return self._customers(handler, parsed)
         if path == '/api/pos/cliente':
             return self._customer(handler, parsed)
+        if path == '/api/pos/proveedores':
+            return self._proveedores(handler, parsed)
+        if path == '/api/pos/proveedor':
+            return self._proveedor(handler, parsed)
         if path == '/api/pos/today':
             return self._today(handler, parsed)
         if path == '/api/pos/printers':
@@ -356,6 +361,80 @@ class PosAPI:
             return
         self._json(handler, {'ok': True, 'customer': customer})
 
+    def _authorize_supplier_write(self, handler, session):
+        if session.get('role') not in ('gerente', 'administrador'):
+            self._json(handler, {'ok': False, 'error': 'Solo gerente o administrador.'}, 403)
+            return False
+        return True
+
+    def _proveedores(self, handler, parsed):
+        session, config = self._auth(handler, parsed)
+        if not session:
+            return
+        params = parse_qs(parsed.query)
+        query = (params.get('q') or [''])[0].strip()[:120]
+        include_value = (params.get('eliminados') or ['0'])[0].strip().casefold()
+        include_deleted = include_value in ('1', 'true', 'si', 'sí')
+        try:
+            limit = min(max(int((params.get('limit') or ['100'])[0]), 1), 500)
+        except ValueError:
+            limit = 100
+        data = suppliers_core.search_proveedores(query, include_deleted, limit)
+        self._json(handler, {'ok': True, **data})
+
+    def _proveedor(self, handler, parsed):
+        session, config = self._auth(handler, parsed)
+        if not session:
+            return
+        params = parse_qs(parsed.query)
+        try:
+            pid = int((params.get('id') or ['0'])[0])
+        except (TypeError, ValueError):
+            pid = 0
+        prov = suppliers_core.get_proveedor(pid)
+        if not prov:
+            self._json(handler, {'ok': False, 'error': 'Proveedor no encontrado.'}, 404)
+            return
+        self._json(handler, {'ok': True, 'proveedor': prov})
+
+    def _proveedor_create(self, handler, parsed):
+        session, config = self._auth(handler, parsed)
+        if not session:
+            return
+        if not self._authorize_supplier_write(handler, session):
+            return
+        body = self._body(handler)
+        prov = suppliers_core.create_proveedor(body, user_id=session.get('user_id'))
+        self._json(handler, {'ok': True, 'proveedor': prov})
+
+    def _proveedor_update(self, handler, parsed):
+        session, config = self._auth(handler, parsed)
+        if not session:
+            return
+        if not self._authorize_supplier_write(handler, session):
+            return
+        body = self._body(handler)
+        try:
+            pid = int(body.get('id') or 0)
+        except (TypeError, ValueError):
+            pid = 0
+        prov = suppliers_core.update_proveedor(pid, body, user_id=session.get('user_id'))
+        self._json(handler, {'ok': True, 'proveedor': prov})
+
+    def _proveedor_delete(self, handler, parsed):
+        session, config = self._auth(handler, parsed)
+        if not session:
+            return
+        if not self._authorize_supplier_write(handler, session):
+            return
+        body = self._body(handler)
+        try:
+            pid = int(body.get('id') or 0)
+        except (TypeError, ValueError):
+            pid = 0
+        suppliers_core.delete_proveedor(pid, user_id=session.get('user_id'))
+        self._json(handler, {'ok': True})
+
     def _today(self, handler, parsed):
         session, config = self._auth(handler, parsed)
         if not session:
@@ -464,6 +543,12 @@ class PosAPI:
                 return self._inventory_edit(handler, parsed)
             if path == '/api/pos/inventory/active':
                 return self._inventory_active(handler, parsed)
+            if path == '/api/pos/proveedores/create':
+                return self._proveedor_create(handler, parsed)
+            if path == '/api/pos/proveedores/update':
+                return self._proveedor_update(handler, parsed)
+            if path == '/api/pos/proveedores/delete':
+                return self._proveedor_delete(handler, parsed)
             if path == '/api/pos/inventory/import':
                 return self._inventory_import(handler, parsed)
             if path == '/api/pos/unit':

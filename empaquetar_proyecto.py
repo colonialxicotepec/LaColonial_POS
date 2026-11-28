@@ -30,8 +30,8 @@ DIST_DIR = os.path.join(BASE_DIR, 'dist')
 # archivos y carpetas que se empaquetan
 INCLUDE_FILES = [
     'app_pos.py', 'catalogo.py', 'pos_api.py', 'pos_core.py', 'pos_print.py',
-    'impresora_local.py',
-    'importar_clientes.py',
+    'impresora_local.py', 'logo.ico',
+    'importar_clientes.py', 'importar_proveedores.py',
     'verificar_instalacion.py', 'empaquetar_proyecto.py', 'verificar_paquete.py',
     'reiniciar_caja.py', 'restaurar_respaldo.py',
     'pos_config.json',
@@ -92,6 +92,15 @@ def collect(con_historico=False):
                     continue
                 full = os.path.join(dirpath, filename)
                 items.append(os.path.relpath(full, BASE_DIR).replace('\\', '/'))
+    # El logo versionado vive en ui/ y ya se recopila con esa carpeta. Para
+    # instalaciones antiguas se conserva tickets/logo.png como alternativa,
+    # sin incluir ninguno de los tickets operativos.
+    logo_ui = 'ui/logo.png'
+    logo_ticket = 'tickets/logo.png'
+    if (not os.path.isfile(os.path.join(BASE_DIR, logo_ui))
+            and os.path.isfile(os.path.join(BASE_DIR, logo_ticket))
+            and logo_ticket not in items):
+        items.append(logo_ticket)
     if con_historico:
         hist = os.path.join(BASE_DIR, 'historico_1box.db')
         if os.path.exists(hist) and 'historico_1box.db' not in items:
@@ -116,18 +125,22 @@ def main():
 
     items = collect(args.con_historico)
 
-    # base consistente
+    # base consistente. Desde aquí el nombre lógico es el nombre final dentro
+    # del ZIP, para que el manifiesto y los verificadores apunten a pos.db.
     db_dest = os.path.join(DIST_DIR, '_pos_copia.db')
     if os.path.exists(os.path.join(BASE_DIR, 'pos.db')):
         copy_db_consistent(os.path.join(BASE_DIR, 'pos.db'), db_dest)
-        items.append('_pos_copia.db')
+        items.append('pos.db')
+
+    def origen_item(item):
+        return db_dest if item == 'pos.db' else os.path.join(BASE_DIR, item)
 
     # manifiesto
     manifest_lines = ['MANIFIESTO DEL PAQUETE POS LA COLONIAL',
                       f'Generado: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
                       '', 'SHA-256 de cada archivo:']
     for item in items:
-        full = os.path.join(BASE_DIR, item) if not item.startswith('_pos_copia') else db_dest
+        full = origen_item(item)
         if os.path.isfile(full):
             manifest_lines.append(f'{sha256_file(full)}  {item}')
     manifest_path = os.path.join(DIST_DIR, '_MANIFIESTO.txt')
@@ -161,19 +174,18 @@ Si Windows pregunta por la red: la caja sólo escucha en 127.0.0.1
     print(f'  Archivo destino : {zip_path}')
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
         for item in items:
-            full = os.path.join(BASE_DIR, item) if not item.startswith('_pos_copia') else db_dest
+            full = origen_item(item)
             if os.path.isfile(full):
-                arcname = 'pos.db' if item == '_pos_copia.db' else item
-                zf.write(full, arcname)
-                print(f'    + {arcname}')
+                zf.write(full, item)
+                print(f'    + {item}')
         zf.write(manifest_path, 'MANIFIESTO.txt')
         zf.write(leeme_path, 'LEEME-INSTALACION.txt')
         print('    + MANIFIESTO.txt')
         print('    + LEEME-INSTALACION.txt')
 
-    os.remove(db_dest)
-    os.remove(manifest_path)
-    os.remove(leeme_path)
+    for temporal in (db_dest, manifest_path, leeme_path):
+        if os.path.exists(temporal):
+            os.remove(temporal)
 
     size = os.path.getsize(zip_path) / (1024 ** 2)
     digest = sha256_file(zip_path)

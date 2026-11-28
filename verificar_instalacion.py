@@ -23,10 +23,12 @@ REPORT_PATH = os.path.join(BASE_DIR, 'Historico', 'Auxiliares', 'migracion',
 
 REQUIRED_FILES = [
     'app_pos.py', 'pos_core.py', 'pos_api.py', 'pos_print.py', 'catalogo.py',
-    'pos_config.json', 'pos.db', 'caja.bat',
-    'importar_clientes.py',
+    'pos_config.json', 'pos.db', 'caja.bat', 'logo.ico',
+    'importar_clientes.py', 'importar_proveedores.py',
+    os.path.join('core', 'suppliers.py'),
     os.path.join('ui', 'caja.html'), os.path.join('ui', 'caja.js'),
     os.path.join('ui', 'caja.css'), os.path.join('ui', 'index.html'),
+    os.path.join('ui', 'logo.png'), os.path.join('ui', 'js', 'suppliers.js'),
 ]
 
 results = []
@@ -56,6 +58,8 @@ def main():
     faltan = [f for f in REQUIRED_FILES if not os.path.exists(os.path.join(BASE_DIR, f))]
     check('Archivos del proyecto completos', not faltan,
           'faltan: ' + ', '.join(faltan) if faltan else f'{len(REQUIRED_FILES)} archivos')
+    core_dir = os.path.join(BASE_DIR, 'core')
+    check('Carpeta core/ presente', os.path.isdir(core_dir), core_dir)
 
     # 3. Base de datos
     db_path = os.path.join(BASE_DIR, 'pos.db')
@@ -66,7 +70,8 @@ def main():
             check('Base de datos íntegra (SQLite)', integridad == 'ok', integridad)
             tablas = {r[0] for r in conn.execute(
                 "SELECT name FROM sqlite_master WHERE type='table'")}
-            faltan_tablas = {'users', 'products', 'sales', 'shifts', 'stock_movements'} - tablas
+            faltan_tablas = {'users', 'products', 'sales', 'shifts',
+                             'stock_movements', 'proveedores'} - tablas
             check('Tablas completas', not faltan_tablas,
                   'faltan: ' + ', '.join(faltan_tablas) if faltan_tablas else f'{len(tablas)} tablas')
             customer_tables = {'customers', 'sale_customers'} - tablas
@@ -78,6 +83,13 @@ def main():
             check('Tablas de clientes', not customer_tables,
                   customer_detail,
                   critico=False)
+            if 'proveedores' in tablas:
+                proveedores = conn.execute('SELECT COUNT(*) FROM proveedores').fetchone()[0]
+                activos_proveedores = conn.execute(
+                    'SELECT COUNT(*) FROM proveedores WHERE activo=1').fetchone()[0]
+                check('Proveedores accesibles', True,
+                      f'{proveedores:,} proveedores ({activos_proveedores:,} activos)',
+                      critico=False)
             productos = conn.execute('SELECT COUNT(*) FROM products').fetchone()[0]
             activos = conn.execute('SELECT COUNT(*) FROM products WHERE active=1').fetchone()[0]
             check('Inventario cargado', productos > 0, f'{productos:,} productos ({activos:,} activos)')

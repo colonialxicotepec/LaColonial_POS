@@ -5,6 +5,7 @@ function logoutLocal() {
   S.token = '';
   S.user = null;
   S.shift = null;
+  S.proveedorRows = [];
   localStorage.removeItem(TOKEN_KEY);
 }
 
@@ -139,7 +140,9 @@ async function refreshQuiet() {
     S.notifications = data.notifications || 0;
     S.user = data.user;
     renderHeader();
-    if (S.shift) renderCart();
+    const editingQty = !!(document.activeElement
+      && document.activeElement.matches && document.activeElement.matches('.qty-input'));
+    if (S.shift && !editingQty) renderCart();
     if (!$('pendingModal').hidden) renderPendingModal();
     if (!$('cashModal').hidden) {
       const cash = await api('/api/pos/cash/movements');
@@ -206,6 +209,7 @@ function renderHeader() {
 
   const manager = canManage();
   const cashRegister = isCashRegister();
+  renderProveedorPermissions();
   $('invBtn').hidden = !manager;
   if ($('xicoParkBtn')) $('xicoParkBtn').hidden = !manager;
   $('unitsBtn').hidden = !manager;
